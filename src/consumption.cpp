@@ -1053,6 +1053,10 @@ bool player::consume_effects( item &food )
     modify_addiction( comest );
     modify_morale( food, nutr );
 
+    if( comest.stamina_pool_recovery != 0 ) {
+        mod_stamina_max_penalty( -comest.stamina_pool_recovery );
+    }
+
     const bool hibernate = has_active_mutation( trait_id( "HIBERNATE" ) );
     if( hibernate ) {
         if( ( nutr > 0 && get_hunger() < -60 ) || ( comest.quench > 0 && get_thirst() < -60 ) ) {

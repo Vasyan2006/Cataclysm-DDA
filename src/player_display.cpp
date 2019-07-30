@@ -317,13 +317,15 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
         }
     } else if( line == 4 ) {
         mvwprintz( w_stats, 6, 1, h_light_gray, _( "Weight:" ) );
-        mvwprintz( w_stats, 6, 25 - you.get_weight_string().size(), h_light_gray, you.get_weight_string() );
-        const int lines = fold_and_print( w_info, 0, 1, FULL_SCREEN_WIDTH - 2, c_magenta,
+        mvwprintz( w_info, 6, 5, h_light_gray, "%2d", static_cast<int>( to_kilogram( you.bodyweight() ) ) );
+        fold_and_print( w_info, 0, 1, FULL_SCREEN_WIDTH - 2, c_magenta,
                                           _( "Your weight is a general indicator of how much fat your body has stored up,"
                                              " which in turn shows how prepared you are to survive for a time without food."
                                              "Having too much, or too little, can be unhealthy." ) );
-        fold_and_print( w_info, 1 + lines, 1, FULL_SCREEN_WIDTH - 2, c_magenta,
+        /*fold_and_print( w_info, 1 + lines, 1, FULL_SCREEN_WIDTH - 2, c_magenta,
                         you.get_weight_description() );
+                        */
+
     }
     wrefresh( w_stats );
     wrefresh( w_info );
@@ -357,7 +359,7 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
     mvwprintz( w_stats, 4, 1, c_light_gray, _( "Intelligence:" ) );
     mvwprintz( w_stats, 5, 1, c_light_gray, _( "Perception:" ) );
     mvwprintz( w_stats, 6, 1, c_light_gray, _( "Weight:" ) );
-    mvwprintz( w_stats, 6, 25 - you.get_weight_string().size(), c_light_gray, you.get_weight_string() );
+    //mvwprintz( w_stats, 6, 25 - you.get_weight_string().size(), c_light_gray, static_cast<int>( to_kilogram( you.bodyweight() ) ) );
     wrefresh( w_stats );
 }
 
@@ -919,7 +921,8 @@ static void draw_initial_windows( const catacurses::window &w_stats,
     display_stat( _( "Intelligence:" ), you.get_int(), you.get_int_base(), 4 );
     display_stat( _( "Perception:" ), you.get_per(), you.get_per_base(), 5 );
     mvwprintz( w_stats, 6, 1, c_light_gray, _( "Weight:" ) );
-    mvwprintz( w_stats, 6, 25 - you.get_weight_string().size(), c_light_gray, you.get_weight_string() );
+    // !!!_ to_kilogram here _!!!
+    mvwprintz( w_stats, 6, 19, c_light_gray, std::to_string( static_cast<float>( to_kilogram( you.bodyweight() ) ) ) );
 
     wrefresh( w_stats );
 

@@ -379,6 +379,7 @@
     "color": "brown",
     "addiction_type": "amphetamine",
     "use_action": "CAFF",
+    "stamina_pool_recovery": 2500,
     "stim": 20,
     "container": "bottle_glass",
     "comestible_type": "DRINK",

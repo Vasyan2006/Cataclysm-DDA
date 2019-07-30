@@ -286,6 +286,14 @@ class game
         /** Swaps positions of two creatures */
         bool swap_critters( Creature &first, Creature &second );
 
+        /** Game settings from json */
+        int stamina_max_default;
+        float stamina_penalty_rate;
+        float stamina_increase_hunger;
+        float stamina_increase_thirst;
+        float stamina_increase_fatigue;
+        bool no_npc_food;
+
     private:
         friend class monster_range;
         friend class Creature_range;

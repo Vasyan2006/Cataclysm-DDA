@@ -6,6 +6,7 @@
 
 #include "color.h"
 #include "sdl_wrappers.h"
+#include "tgmath.h"
 
 inline SDL_Color adjust_color_brightness( const SDL_Color &color, int percent )
 {

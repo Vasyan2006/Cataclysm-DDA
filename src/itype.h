@@ -139,6 +139,9 @@ struct islot_comestible {
     /** Reference to other item that replaces this one as a component in recipe results */
     itype_id cooks_like;
 
+    /** change stamina penalty */
+    int stamina_pool_recovery = 0;
+
     /** Reference to item that will be received after smoking current item */
     itype_id smoking_result;
 

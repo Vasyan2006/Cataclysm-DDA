@@ -269,6 +269,8 @@ class player : public Character
         void update_body( const time_point &from, const time_point &to );
         /** Updates the stomach to give accurate hunger messages */
         void update_stomach( const time_point &from, const time_point &to );
+        /** Updates hunger messages */
+        void update_hunger();
         /** Increases hunger, thirst, fatigue and stimulants wearing off. `rate_multiplier` is for retroactive updates. */
         void update_needs( int rate_multiplier );
         needs_rates calc_needs_rates();
@@ -1663,6 +1665,8 @@ class player : public Character
         int get_hp_max( hp_part bp ) const override;
         int get_hp_max() const override;
         int get_stamina_max() const;
+        int get_stamina_max_penalty() const;
+        void mod_stamina_max_penalty( int modifier );
         void burn_move_stamina( int moves );
 
         //message related stuff

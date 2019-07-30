@@ -2576,6 +2576,14 @@ void game::load_master()
     using namespace std::placeholders;
     const auto datafile = get_world_base_save_path() + "/master.gsav";
     read_from_file_optional( datafile, std::bind( &game::unserialize_master, this, _1 ) );
+
+    // Cache settings, which will be used on every turn
+    stamina_max_default = get_option< int >( "PLAYER_MAX_STAMINA" );
+    stamina_penalty_rate = get_option< float >( "PLAYER_STAMINA_PENALTY" );
+    stamina_increase_hunger = get_option< float >( "PLAYER_RECOVER_STAMINA_INCREASE_HUNGER" );
+    stamina_increase_thirst = get_option< float >( "PLAYER_RECOVER_STAMINA_INCREASE_THIRST" );
+    stamina_increase_fatigue = get_option< float >( "PLAYER_RECOVER_STAMINA_INCREASE_FATIGUE" );
+    no_npc_food = get_option< bool >( "NO_NPC_FOOD" );
 }
 
 bool game::load( const std::string &world )
@@ -9729,13 +9737,9 @@ void game::on_move_effects()
         }
     }
 
-    if( u.movement_mode_is( PMM_RUN ) ) {
-        if( u.stamina <= 0 ) {
-            u.toggle_run_mode();
-        }
-        if( u.stamina < u.get_stamina_max() / 5 && one_in( u.stamina ) ) {
-            u.add_effect( effect_winded, 10_turns );
-        }
+    if( u.movement_mode_is( PMM_RUN ) && u.has_effect( effect_winded ) ) {
+        u.toggle_run_mode();
+        add_msg( m_bad, _( "You don't have enough stamina for running." ) );
     }
 
     // apply martial art move bonuses

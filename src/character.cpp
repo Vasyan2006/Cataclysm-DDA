@@ -49,6 +49,8 @@
 #include "stomach.h"
 #include "ui.h"
 
+#include "units.h"
+
 const efftype_id effect_alarm_clock( "alarm_clock" );
 const efftype_id effect_bandaged( "bandaged" );
 const efftype_id effect_beartrap( "beartrap" );
@@ -145,7 +147,9 @@ Character::Character() :
     sleep_deprivation = 0;
     // 45 days to starve to death
     healthy_calories = 55000;
+    stored_calories_buffer_default = 2000;
     stored_calories = healthy_calories;
+    stored_calories_buffer = stored_calories_buffer_default;
     initialize_stomach_contents();
     healed_total = { { 0, 0, 0, 0, 0, 0 } };
 
@@ -2104,6 +2108,30 @@ int Character::get_healthy_kcal() const
     return healthy_calories;
 }
 
+
+int Character::get_healthy_kcal_buffer() const
+{
+    return stored_calories_buffer_default;
+}
+
+
+int Character::get_stored_kcal_buffer() const
+{
+    return stored_calories_buffer;
+}
+
+void Character::mod_stored_kcal_buffer( int nkcal )
+{
+    set_stored_kcal_buffer( stored_calories_buffer + nkcal );
+}
+
+void Character::set_stored_kcal_buffer( int kcal )
+{
+    if( stored_calories_buffer != kcal ) {
+        stored_calories_buffer = kcal;
+    }
+}
+
 float Character::get_kcal_percent() const
 {
     return static_cast<float>( get_stored_kcal() ) / static_cast<float>( get_healthy_kcal() );
@@ -2325,8 +2353,11 @@ void Character::reset_bonuses()
 
 int Character::get_max_healthy() const
 {
+    /**
     const float bmi = get_bmi();
     return clamp( static_cast<int>( round( -3 * ( bmi - 18.5 ) * ( bmi - 25 ) + 200 ) ), -200, 200 );
+    **/
+    return 200;
 }
 
 void Character::update_health( int external_modifiers )
@@ -3233,7 +3264,8 @@ float Character::healing_rate_medicine( float at_rest_quality, const body_part b
 
 float Character::get_bmi() const
 {
-    return 12 * get_kcal_percent() + 13;
+   // return 12 * get_kcal_percent() + 13;
+   return units::to_kilogram( bodyweight() ) / pow( height() / 100.0f, 2 );
 }
 
 std::string Character::get_weight_string() const
@@ -3306,7 +3338,24 @@ std::string Character::get_weight_description() const
 
 units::mass Character::bodyweight() const
 {
-    return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
+   // double weight = get_str_base()
+
+    //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
+    //return units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height  );
+    return units::from_kilogram( to_kilogram( bodyweight_base() ) + ( get_stored_kcal() - get_healthy_kcal() ) * 0.00067f );
+}
+
+units::mass Character::bodyweight_base() const
+{
+    //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
+    return units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height );
+}
+
+float Character::bodyweight_relative() const
+{
+    //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
+    return static_cast<float>( units::to_kilogram( bodyweight() ) ) / static_cast<float>( units::to_kilogram( bodyweight_base() ) );
+    //units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height );
 }
 
 int Character::height() const
@@ -3339,12 +3388,13 @@ int Character::get_bmr() const
 {
     /**
     Values are for males, and average!
-    */
     const int age = 25;
     const int equation_constant = 5;
     return ceil( metabolic_rate_base() * activity_level * ( units::to_gram<int>
                  ( bodyweight() / 100.0 ) +
                  ( 6.25 * height() ) - ( 5 * age ) + equation_constant ) );
+                 */
+    return 1800 * units::to_kilogram( bodyweight_base() ) / init_weight * metabolic_rate_base();
 }
 
 void Character::increase_activity_level( float new_level )

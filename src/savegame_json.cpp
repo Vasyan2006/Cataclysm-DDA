@@ -389,6 +389,9 @@ void Character::load( JsonObject &data )
     data.read( "fatigue", fatigue );
     data.read( "sleep_deprivation", sleep_deprivation );
     data.read( "stored_calories", stored_calories );
+    if( !data.read( "stored_calories_buffer", stored_calories_buffer ) ) {
+        stored_calories_buffer = stored_calories_buffer_default;
+    }
     data.read( "radiation", radiation );
     data.read( "oxygen", oxygen );
 
@@ -546,8 +549,11 @@ void Character::store( JsonOut &json ) const
     json.member( "fatigue", fatigue );
     json.member( "sleep_deprivation", sleep_deprivation );
     json.member( "stored_calories", stored_calories );
+    json.member( "stored_calories_buffer", stored_calories_buffer );
     json.member( "radiation", radiation );
     json.member( "stamina", stamina );
+    json.member( "stamina_max_penalty", stamina_max_penalty );
+    json.member( "stamina_used", stamina_used );
 
     // breathing
     json.member( "underwater", underwater );
@@ -978,6 +984,13 @@ void avatar::load( JsonObject &data )
     }
 
     data.read( "stamina", stamina );
+    if( !data.read( "stamina_max_penalty", stamina_max_penalty ) ) {
+        stamina_max_penalty = 0;
+    }
+    if( !data.read( "stamina_used", stamina_used ) ) {
+        stamina_used = 0;
+    }
+
     data.read( "magic", magic );
     std::string tmove_mode;
     data.read( "move_mode", tmove_mode );

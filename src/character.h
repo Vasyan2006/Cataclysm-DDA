@@ -240,7 +240,9 @@ class Character : public Creature, public visitable<Character>
 
         /** Getter for need values exclusive to characters */
         virtual int get_stored_kcal() const;
+        virtual int get_stored_kcal_buffer() const;
         virtual int get_healthy_kcal() const;
+        virtual int get_healthy_kcal_buffer() const;
         virtual float get_kcal_percent() const;
         virtual int get_hunger() const;
         virtual int get_starvation() const;
@@ -253,6 +255,7 @@ class Character : public Creature, public visitable<Character>
 
         /** Modifiers for need values exclusive to characters */
         virtual void mod_stored_kcal( int nkcal );
+        virtual void mod_stored_kcal_buffer( int nkcal );
         virtual void mod_stored_nutr( int nnutr );
         virtual void mod_hunger( int nhunger );
         virtual void mod_thirst( int nthirst );
@@ -261,6 +264,7 @@ class Character : public Creature, public visitable<Character>
 
         /** Setters for need values exclusive to characters */
         virtual void set_stored_kcal( int kcal );
+        virtual void set_stored_kcal_buffer( int kcal );
         virtual void set_hunger( int nhunger );
         virtual void set_thirst( int nthirst );
         virtual void set_fatigue( int nfatigue );
@@ -816,6 +820,8 @@ class Character : public Creature, public visitable<Character>
         int max_power_level;
         int oxygen;
         int stamina;
+        int stamina_max_penalty;
+        int stamina_used;
         int radiation;
 
         void initialize_stomach_contents();
@@ -836,6 +842,8 @@ class Character : public Creature, public visitable<Character>
         int height() const;
         // returns bodyweight of the Character
         units::mass bodyweight() const;
+        units::mass bodyweight_base() const;
+        float bodyweight_relative() const;
         // increases the activity level to the next level
         // does not decrease activity level
         void increase_activity_level( float new_level );
@@ -906,6 +914,7 @@ class Character : public Creature, public visitable<Character>
 
         /**height at character creation*/
         int init_height = 175;
+        int init_weight = 80;
 
         // the player's activity level for metabolism calculations
         float activity_level = NO_EXERCISE;
@@ -953,6 +962,8 @@ class Character : public Creature, public visitable<Character>
         /** Needs (hunger, starvation, thirst, fatigue, etc.) */
         int stored_calories;
         int healthy_calories;
+        int stored_calories_buffer;
+        int stored_calories_buffer_default;
 
         int hunger;
         int thirst;

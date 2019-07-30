@@ -266,6 +266,7 @@
     "color": "brown",
     "addiction_type": "caffeine",
     "use_action": "CAFF",
+    "stamina_pool_recovery": 2500,
     "stim": 8,
     "container": "bottle_plastic",
     "comestible_type": "DRINK",

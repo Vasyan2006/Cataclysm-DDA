@@ -18,6 +18,9 @@
 #include "rng.h"
 #include "character.h"
 
+
+#include "messages.h"
+
 stomach_contents::stomach_contents() = default;
 
 stomach_contents::stomach_contents( units::volume max_vol )
@@ -97,7 +100,7 @@ bool stomach_contents::store_absorbed( player &p )
 {
     bool absorbed = false;
     if( calories_absorbed != 0 ) {
-        p.mod_stored_kcal( calories_absorbed );
+        p.mod_stored_kcal_buffer( calories_absorbed );
         absorbed = true;
     }
     p.vitamins_mod( vitamins_absorbed );
@@ -322,12 +325,13 @@ stomach_pass_rates stomach_contents::get_pass_rates( bool stomach )
 stomach_absorb_rates stomach_contents::get_absorb_rates( bool stomach,
         const needs_rates &metabolic_rates )
 {
+    // !!!!  / 6.0f !!!!
     stomach_absorb_rates rates;
     if( !stomach ) {
-        rates.min_kcal = roll_remainder( metabolic_rates.kcal / 24.0 * metabolic_rates.hunger );
-        rates.percent_kcal = 0.05f * metabolic_rates.hunger;
-        rates.min_vitamin_default = round( 100.0 / 24.0 * metabolic_rates.hunger );
-        rates.percent_vitamin_default = 0.05f * metabolic_rates.hunger;
+        rates.min_kcal = roll_remainder( metabolic_rates.kcal / 24.0 * metabolic_rates.hunger / 6.0f );
+        rates.percent_kcal = 0.05f * metabolic_rates.hunger / 6.0f;
+        rates.min_vitamin_default = round( 100.0 / 24.0 * metabolic_rates.hunger / 6.0f );
+        rates.percent_vitamin_default = 0.05f * metabolic_rates.hunger / 6.0f;
     } else {
         rates.min_kcal = 0;
         rates.percent_kcal = 0.0f;
