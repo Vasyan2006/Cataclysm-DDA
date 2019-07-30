@@ -3785,12 +3785,12 @@ void player::update_stomach( const time_point &from, const time_point &to )
            // timerate = 500.0f;
             dcalorie = ( get_stored_kcal_buffer() - limit_upper ) / timerate;
             mod_stored_kcal_buffer( -dcalorie );
-            mod_stored_kcal( dcalorie );
+            mod_stored_kcal( dcalorie / 5 );
         } else if( get_stored_kcal_buffer() < limit_lower ) {
           //  timerate = 500.0f;
             dcalorie = ( get_stored_kcal_buffer() - limit_lower ) / timerate;
             //dcalorie *= get_stored_kcal_buffer() / get_healthy_kcal_buffer() * 2;
-            mod_stored_kcal_buffer( -dcalorie /2 );
+            mod_stored_kcal_buffer( -dcalorie / 5 );
             mod_stored_kcal( dcalorie );
         }
 

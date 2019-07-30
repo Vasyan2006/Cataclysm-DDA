@@ -147,7 +147,7 @@ Character::Character() :
     sleep_deprivation = 0;
     // 45 days to starve to death
     healthy_calories = 55000;
-    stored_calories_buffer_default = 2000;
+    stored_calories_buffer_default = 8000;
     stored_calories = healthy_calories;
     stored_calories_buffer = stored_calories_buffer_default;
     initialize_stomach_contents();
