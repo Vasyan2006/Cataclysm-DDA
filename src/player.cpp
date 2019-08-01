@@ -3802,8 +3802,8 @@ void player::update_stomach( const time_point &from, const time_point &to )
         }
 
 
-        add_msg( "dcalorie %s ", dcalorie );
-        add_msg( "buffer %s ",get_stored_kcal_buffer() );
+       // add_msg( "dcalorie %s ", dcalorie );
+       // add_msg( "buffer %s ",get_stored_kcal_buffer() );
 
 
       //  add_msg( "hunger %s %s %s", get_stored_kcal_buffer(), get_stored_kcal(), get_healthy_kcal_buffer()  );
@@ -3820,7 +3820,7 @@ void player::update_stomach( const time_point &from, const time_point &to )
 
     hunger_mod += -1.0f * ( get_stored_kcal_buffer() - ( limit_upper + limit_lower ) / 2 ) / ( ( limit_upper - limit_lower ) / 2  ) * 30;
     hunger_mod += -100 * stomach.contains() / stomach.capacity();
-    add_msg( "hunger %s", hunger_mod );
+    //add_msg( "hunger %s", hunger_mod );
     set_hunger( hunger_mod );
 
 
