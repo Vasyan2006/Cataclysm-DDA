@@ -655,6 +655,7 @@ bool avatar::create( character_type type, const std::string &tempname )
 
     stamina_max_penalty = 0;
     stamina_used = 0;
+    stamina_used_fatigue = 0;
 
     return true;
 }

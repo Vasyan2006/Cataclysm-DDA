@@ -822,6 +822,7 @@ class Character : public Creature, public visitable<Character>
         int stamina;
         int stamina_max_penalty;
         int stamina_used;
+        int stamina_used_fatigue;
         int radiation;
 
         void initialize_stomach_contents();

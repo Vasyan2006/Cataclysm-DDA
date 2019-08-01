@@ -554,6 +554,7 @@ void Character::store( JsonOut &json ) const
     json.member( "stamina", stamina );
     json.member( "stamina_max_penalty", stamina_max_penalty );
     json.member( "stamina_used", stamina_used );
+    json.member( "stamina_used_fatigue", stamina_used_fatigue );
 
     // breathing
     json.member( "underwater", underwater );
@@ -989,6 +990,9 @@ void avatar::load( JsonObject &data )
     }
     if( !data.read( "stamina_used", stamina_used ) ) {
         stamina_used = 0;
+    }
+    if( !data.read( "stamina_used_fatigue", stamina_used_fatigue ) ) {
+        stamina_used_fatigue = 0;
     }
 
     data.read( "magic", magic );

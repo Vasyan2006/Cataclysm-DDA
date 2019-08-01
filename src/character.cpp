@@ -146,7 +146,7 @@ Character::Character() :
     fatigue = 0;
     sleep_deprivation = 0;
     // 45 days to starve to death
-    healthy_calories = 55000;
+    healthy_calories = 85000;
     stored_calories_buffer_default = 8000;
     stored_calories = healthy_calories;
     stored_calories_buffer = stored_calories_buffer_default;
@@ -3342,7 +3342,8 @@ units::mass Character::bodyweight() const
 
     //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
     //return units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height  );
-    return units::from_kilogram( to_kilogram( bodyweight_base() ) + ( get_stored_kcal() - get_healthy_kcal() ) * 0.00067f );
+    //10 kcal = 1 gramm
+    return units::from_kilogram( to_kilogram( bodyweight_base() ) + ( get_stored_kcal() - get_healthy_kcal() ) * 0.00011f );
 }
 
 units::mass Character::bodyweight_base() const

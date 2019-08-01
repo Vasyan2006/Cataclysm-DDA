@@ -269,8 +269,6 @@ class player : public Character
         void update_body( const time_point &from, const time_point &to );
         /** Updates the stomach to give accurate hunger messages */
         void update_stomach( const time_point &from, const time_point &to );
-        /** Updates hunger messages */
-        void update_hunger();
         /** Increases hunger, thirst, fatigue and stimulants wearing off. `rate_multiplier` is for retroactive updates. */
         void update_needs( int rate_multiplier );
         needs_rates calc_needs_rates();
