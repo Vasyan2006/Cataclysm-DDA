@@ -86,19 +86,22 @@ const std::map<itype_id, int> plut_charges = {
 
 int player::stomach_capacity() const
 {
+    int cap = -20;
+
     if( has_trait( trait_id( "GIZZARD" ) ) ) {
-        return 0;
+        cap = 0;
     }
 
     if( has_active_mutation( trait_id( "HIBERNATE" ) ) ) {
-        return -620;
+        cap = -620;
     }
 
     if( has_trait( trait_id( "GOURMAND" ) ) || has_trait( trait_id( "HIBERNATE" ) ) ) {
-        return -60;
+        cap = -60;
     }
+    cap *= to_kilogram( bodyweight_base() ) / init_weight;
 
-    return -20;
+    return cap;
 }
 
 // TODO: Move pizza scraping here.
@@ -341,7 +344,7 @@ time_duration player::vitamin_rate( const vitamin_id &vit ) const
         }
     }
 
-    return res;
+    return res * units::to_kilogram( bodyweight_base() ) / init_weight;
 }
 
 int player::vitamin_mod( const vitamin_id &vit, int qty, bool capped )

@@ -657,6 +657,12 @@ bool avatar::create( character_type type, const std::string &tempname )
     stamina_used = 0;
     stamina_used_fatigue = 0;
 
+    // update calorie buffer
+
+    set_stored_kcal( get_healthy_kcal() );
+    set_stored_kcal_buffer( get_healthy_kcal_buffer() );
+    //int temp = get_healthy_kcal_buffer();
+
     return true;
 }
 

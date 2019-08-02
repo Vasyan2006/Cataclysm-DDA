@@ -149,7 +149,8 @@ Character::Character() :
     healthy_calories = 85000;
     stored_calories_buffer_default = 8000;
     stored_calories = healthy_calories;
-    stored_calories_buffer = stored_calories_buffer_default;
+    stored_calories_buffer = stored_calories_buffer_default; //get_healthy_kcal_buffer();
+    //int temp = get_healthy_kcal_buffer();
     initialize_stomach_contents();
     healed_total = { { 0, 0, 0, 0, 0, 0 } };
 
@@ -2105,13 +2106,13 @@ void Character::set_stored_kcal( int kcal )
 
 int Character::get_healthy_kcal() const
 {
-    return healthy_calories;
+    return healthy_calories * to_kilogram( bodyweight_base() ) / init_weight;
 }
 
 
 int Character::get_healthy_kcal_buffer() const
 {
-    return stored_calories_buffer_default;
+    return stored_calories_buffer_default * to_kilogram( bodyweight_base() ) / init_weight;
 }
 
 

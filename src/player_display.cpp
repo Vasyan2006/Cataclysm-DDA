@@ -1132,6 +1132,7 @@ void player::disp_info()
         effect_text.push_back( pain_text.str() );
     }
 
+    /*
     const float bmi = get_bmi();
 
     if( bmi < character_weight_category::underweight ) {
@@ -1156,7 +1157,7 @@ void player::disp_info()
 
         effect_text.push_back( starvation_text.str() );
     }
-
+*/
     if( ( has_trait( trait_id( "TROGLO" ) ) && g->is_in_sunlight( pos() ) &&
           g->weather.weather == WEATHER_SUNNY ) ||
         ( has_trait( trait_id( "TROGLO2" ) ) && g->is_in_sunlight( pos() ) &&

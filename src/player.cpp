@@ -1461,6 +1461,7 @@ void player::temp_equalizer( body_part bp1, body_part bp2 )
 
 int player::kcal_speed_penalty()
 {
+    /*
     static const std::vector<std::pair<float, float>> starv_thresholds = { {
             std::make_pair( 0.0f, -90.0f ),
             std::make_pair( character_weight_category::emaciated, -50.f ),
@@ -1474,6 +1475,9 @@ int player::kcal_speed_penalty()
     } else {
         return round( multi_lerp( starv_thresholds, get_bmi() ) );
     }
+    */
+    return 0;
+
 }
 
 int player::thirst_speed_penalty( int thirst )
@@ -1980,15 +1984,17 @@ void player::mod_stat( const std::string &stat, float modifier )
         /*if( stamina + modifier < 0 ) {
             add_effect( effect_winded, 10_turns );
         }*/
-        if( modifier < 0 ) {
-            // increase calorie consumption, but not fatigue for hulks
-            stamina_used += -modifier * to_kilogram( bodyweight() ) / init_weight;
-            stamina_used_fatigue += -modifier;
-        }
+        if( !is_npc() ) {
+            if( modifier < 0 ) {
+                // weight increases calorie consumption, but not fatigue
+                stamina_used += -modifier * to_kilogram( bodyweight() ) / init_weight;
+                stamina_used_fatigue += -modifier;
+            }
 
-        // increase stamina use for fat
-        if( to_kilogram( bodyweight() ) > to_kilogram( bodyweight_base() ) ) {
-            modifier *= to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() );
+            // overweight increases stamina use
+            if( to_kilogram( bodyweight() ) > to_kilogram( bodyweight_base() ) ) {
+                modifier *= to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() );
+            }
         }
         stamina += modifier * to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() );
 
@@ -3735,9 +3741,12 @@ void player::update_stomach( const time_point &from, const time_point &to )
 
   //  update_hunger();
 
+    //get_healthy_kcal_buffer()
+
     int hunger_mod = 0;
-    int limit_upper = get_healthy_kcal_buffer() * units::to_kilogram( bodyweight_base() ) / init_weight;
-    int limit_lower = get_healthy_kcal_buffer() / 2 * units::to_kilogram( bodyweight_base() ) / init_weight;
+    int limit_upper = get_healthy_kcal_buffer();
+    int limit_lower = limit_upper / 2;
+   // int limit_lower = get_healthy_kcal_buffer() / 2 * units::to_kilogram( bodyweight_base() ) / init_weight;
 
     if( five_mins > 0 ) {
         stomach.absorb_water( *this, 250_ml * five_mins );
@@ -3783,19 +3792,21 @@ void player::update_stomach( const time_point &from, const time_point &to )
         mod_stored_kcal_buffer( dcalorie );
 
 **/
+
+
         float timerate  = 250.0f;
         int dcalorie = 0;
 
         if( get_stored_kcal_buffer() > limit_upper ) {
            // timerate = 500.0f;
-            dcalorie = ( get_stored_kcal_buffer() - limit_upper ) / timerate;
+            dcalorie = ( get_stored_kcal_buffer() - limit_upper ) / timerate * metabolic_rate_base();
             mod_stored_kcal_buffer( -dcalorie );
             float fat_coeff = pow( 10, to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() ) - 1 );
             mod_stored_kcal( dcalorie * 0.5f / fat_coeff );
             // add_msg( "fat_coeff %s ", fat_coeff );
         } else if( get_stored_kcal_buffer() < limit_lower ) {
             timerate = 100.0f;
-            dcalorie = ( get_stored_kcal_buffer() - limit_lower ) / timerate;
+            dcalorie = ( get_stored_kcal_buffer() - limit_lower ) / timerate * metabolic_rate_base();
             //dcalorie *= get_stored_kcal_buffer() / get_healthy_kcal_buffer() * 2;
             mod_stored_kcal_buffer( -dcalorie * 0.5f );
             mod_stored_kcal( dcalorie );
@@ -3817,6 +3828,8 @@ void player::update_stomach( const time_point &from, const time_point &to )
 
 
     }
+    //add_msg( "limit %s %s ", limit_upper, limit_lower );
+    //add_msg( "bmi %s ", get_bmi() );
 
     hunger_mod += -1.0f * ( get_stored_kcal_buffer() - ( limit_upper + limit_lower ) / 2 ) / ( ( limit_upper - limit_lower ) / 2  ) * 30;
     hunger_mod += -100 * stomach.contains() / stomach.capacity();
@@ -3930,7 +3943,7 @@ void player::update_stomach( const time_point &from, const time_point &to )
 */
 
     if( !foodless && rates.thirst > 0.0f ) {
-        mod_thirst( roll_remainder( rates.thirst * five_mins ) );
+        mod_thirst( roll_remainder( rates.thirst * five_mins * units::to_kilogram( bodyweight_base() ) / init_weight) );
     }
     // Mycus and Metabolic Rehydration makes thirst unnecessary
     // since water is not limited by intake but by absorption, we can just set thirst to zero
@@ -4499,7 +4512,7 @@ void player::regen( int rate_multiplier )
 
 void player::update_stamina( int turns )
 {
-    //add_msg( "stamina_used %s", stamina_used );
+   // add_msg( "stamina_used %s", stamina_used );
     float stamina_recovery = 0.0f;
     // Recover some stamina every turn.
     // Mutated stamina works even when winded
@@ -12087,12 +12100,9 @@ std::pair<std::string, nc_color> player::get_hunger_description() const
     } else if( hunger_feel <= 78 ) {
             hunger_string = _( "Near starving" );
             hunger_color = c_red;
-    } else if( hunger_feel <= 90 ) {
+    } else {
             hunger_string = _( "Starving" );
             hunger_color = c_red;
-    } else {
-            hunger_string = _( "PECKISH" );
-            hunger_color = c_white;
     }
 
     return std::make_pair( hunger_string, hunger_color );
