@@ -118,8 +118,8 @@ struct encumbrance_data {
     std::array<layer_details, static_cast<size_t>( layer_level::MAX_CLOTHING_LAYER )>
     layer_penalty_details;
 
-    void layer( const layer_level level, const int emcumbrance ) {
-        layer_penalty += layer_penalty_details[static_cast<size_t>( level )].layer( emcumbrance );
+    void layer( const layer_level level, const int encumbrance ) {
+        layer_penalty += layer_penalty_details[static_cast<size_t>( level )].layer( encumbrance );
     }
 
     void reset() {
@@ -392,6 +392,7 @@ class Character : public Creature, public visitable<Character>
         /** Converts an hp_part to a body_part */
         static body_part hp_to_bp( hp_part hpart );
 
+        bool is_mounted() const;
         /**
          * Displays menu with body part hp, optionally with hp estimation after healing.
          * Returns selected part.
@@ -772,7 +773,7 @@ class Character : public Creature, public visitable<Character>
         /**
          * Goes over all mutations, returning the sum of the social modifiers
          */
-        const social_modifiers get_mutation_social_mods() const;
+        social_modifiers get_mutation_social_mods() const;
 
         /** Color's character's tile's background */
         nc_color symbol_color() const override;
@@ -824,6 +825,8 @@ class Character : public Creature, public visitable<Character>
         int stamina_used;
         int stamina_used_fatigue;
         int radiation;
+
+        std::shared_ptr<monster> mounted_creature;
 
         void initialize_stomach_contents();
 

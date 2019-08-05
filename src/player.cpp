@@ -46,6 +46,7 @@
 #include "martialarts.h"
 #include "material.h"
 #include "messages.h"
+#include "monster.h"
 #include "morale.h"
 #include "morale_types.h"
 #include "mtype.h"
@@ -84,7 +85,6 @@
 #include "lightmap.h"
 #include "line.h"
 #include "math_defines.h"
-#include "monster.h"
 #include "omdata.h"
 #include "overmap_types.h"
 #include "recipe.h"
@@ -124,6 +124,7 @@ const efftype_id effect_cig( "cig" );
 const efftype_id effect_cold( "cold" );
 const efftype_id effect_common_cold( "common_cold" );
 const efftype_id effect_contacts( "contacts" );
+const efftype_id effect_controlled( "controlled" );
 const efftype_id effect_corroding( "corroding" );
 const efftype_id effect_cough_suppress( "cough_suppress" );
 const efftype_id effect_darkness( "darkness" );
@@ -456,8 +457,8 @@ stat_mod player::get_pain_penalty() const
     return ret;
 }
 
-player::player() : Character()
-    , next_climate_control_check( calendar::before_time_starts )
+player::player() :
+    next_climate_control_check( calendar::before_time_starts )
     , cached_time( calendar::before_time_starts )
 {
     id = -1; // -1 is invalid
@@ -643,7 +644,7 @@ void player::process_turn()
     // player::read, player::practice, ...
     // Check for spontaneous discovery of martial art styles
     for( auto &style : autolearn_martialart_types() ) {
-        const matype_id ma( style );
+        const matype_id &ma( style );
 
         if( !has_martialart( ma ) && can_autolearn( ma ) ) {
             add_martialart( ma );
@@ -1104,7 +1105,9 @@ void player::update_bodytemp()
             // Morale bonus for comfiness - only if actually comfy (not too warm/cold)
             // Spread the morale bonus in time.
             if( comfortable_warmth > 0 &&
-                calendar::turn % MINUTES( 1 ) == ( MINUTES( bp ) / MINUTES( num_bp ) ) &&
+                // @todo make this simpler and use time_duration/time_point
+                to_turn<int>( calendar::turn ) % to_turns<int>( 1_minutes ) == ( MINUTES( bp ) / MINUTES(
+                            num_bp ) ) &&
                 get_effect_int( effect_cold, num_bp ) == 0 &&
                 get_effect_int( effect_hot, num_bp ) == 0 &&
                 temp_cur[bp] > BODYTEMP_COLD && temp_cur[bp] <= BODYTEMP_NORM ) {
@@ -1577,7 +1580,7 @@ int player::run_cost( int base_cost, bool diag ) const
         }
     }
 
-    if( !has_effect( effect_riding ) ) {
+    if( !is_mounted() ) {
         if( movecost > 100 ) {
             movecost *= Character::mutation_value( "movecost_obstacle_modifier" );
             if( movecost < 100 ) {
@@ -1695,7 +1698,7 @@ int player::run_cost( int base_cost, bool diag ) const
 int player::swim_speed() const
 {
     int ret;
-    if( has_effect( effect_riding ) && mounted_creature != nullptr ) {
+    if( is_mounted() ) {
         monster *mon = mounted_creature.get();
         // no difference in swim speed by monster type yet.
         // TODO : difference in swim speed by monster type.
@@ -2385,7 +2388,9 @@ int player::overmap_sight_range( int light_level ) const
 
     float multiplier = Character::mutation_value( "overmap_multiplier" );
     // Binoculars double your sight range.
-    const bool has_optic = ( has_item_with_flag( "ZOOM" ) || has_bionic( bio_eye_optic ) );
+    const bool has_optic = ( has_item_with_flag( "ZOOM" ) || has_bionic( bio_eye_optic ) ||
+                             ( is_mounted() &&
+                               mounted_creature->has_flag( MF_MECH_RECON_VISION ) ) );
     if( has_optic ) {
         multiplier += 1;
     }
@@ -2567,8 +2572,12 @@ void player::set_movement_mode( const player_movemode new_mode )
 {
     switch( new_mode ) {
         case PMM_WALK: {
-            if( has_effect( effect_riding ) ) {
-                add_msg( _( "You nudge your steed to a steady trot." ) );
+            if( is_mounted() ) {
+                if( mounted_creature->has_flag( MF_RIDEABLE_MECH ) ) {
+                    add_msg( _( "You set your mech's leg power to a loping fast walk." ) );
+                } else {
+                    add_msg( _( "You nudge your steed into a steady trot." ) );
+                }
             } else {
                 add_msg( _( "You start walking." ) );
             }
@@ -2579,13 +2588,18 @@ void player::set_movement_mode( const player_movemode new_mode )
                 if( is_hauling() ) {
                     stop_hauling();
                 }
-                if( has_effect( effect_riding ) ) {
-                    add_msg( _( "You spur your steed into a gallop." ) );
+                if( is_mounted() ) {
+                    if( mounted_creature->has_flag( MF_RIDEABLE_MECH ) ) {
+                        add_msg( _( "You set the power of your mech's leg servos to maximum." ) );
+                    } else {
+                        add_msg( _( "You spur your steed into a gallop." ) );
+                    }
                 } else {
                     add_msg( _( "You start running." ) );
                 }
             } else {
-                if( has_effect( effect_riding ) ) {
+                if( is_mounted() ) {
+                    // mounts dont currently have stamina, but may do in future.
                     add_msg( m_bad, _( "Your steed is too tired to go faster." ) );
                 } else {
                     add_msg( m_bad, _( "You're too tired to run." ) );
@@ -2594,8 +2608,12 @@ void player::set_movement_mode( const player_movemode new_mode )
             break;
         }
         case PMM_CROUCH: {
-            if( has_effect( effect_riding ) ) {
-                add_msg( _( "You slow your steed to a walk." ) );
+            if( is_mounted() ) {
+                if( mounted_creature->has_flag( MF_RIDEABLE_MECH ) ) {
+                    add_msg( _( "You reduce the power of your mech's leg servos to minimum." ) );
+                } else {
+                    add_msg( _( "You slow your steed to a walk." ) );
+                }
             } else {
                 add_msg( _( "You start crouching." ) );
             }
@@ -6946,6 +6964,14 @@ std::list<item> player::use_charges( const itype_id &what, int qty,
         return res;
 
     } else if( what == "UPS" ) {
+        if( is_mounted() && mounted_creature.get()->has_flag( MF_RIDEABLE_MECH ) &&
+            mounted_creature.get()->battery_item ) {
+            auto mons = mounted_creature.get();
+            int power_drain = std::min( mons->battery_item->ammo_remaining(), qty );
+            mons->use_mech_power( -power_drain );
+            qty -= std::min( qty, power_drain );
+            return res;
+        }
         if( power_level > 0 && has_active_bionic( bio_ups ) ) {
             int bio = std::min( power_level, qty );
             charge_power( -bio );
@@ -7035,6 +7061,11 @@ bool player::has_charges( const itype_id &it, int quantity,
 {
     if( it == "fire" || it == "apparatus" ) {
         return has_fire( quantity );
+    }
+    if( it == "UPS" && is_mounted() &&
+        mounted_creature.get()->has_flag( MF_RIDEABLE_MECH ) ) {
+        auto mons = mounted_creature.get();
+        return quantity <= mons->battery_item->ammo_remaining();
     }
     return charges_of( it, quantity, filter ) == quantity;
 }
@@ -7667,24 +7698,24 @@ ret_val<bool> player::can_wear( const item &it ) const
 
     if( ( ( it.covers( bp_foot_l ) && is_wearing_shoes( side::LEFT ) ) ||
           ( it.covers( bp_foot_r ) && is_wearing_shoes( side::RIGHT ) ) ) &&
-        ( !it.has_flag( "OVERSIZE" ) || !it.has_flag( "OUTER" ) ) &&
-        !it.has_flag( "SKINTIGHT" ) && !it.has_flag( "BELTED" ) ) {
+        ( !it.has_flag( "OVERSIZE" ) || !it.has_flag( "OUTER" ) ) && !it.has_flag( "SKINTIGHT" ) &&
+        !it.has_flag( "BELTED" ) && !it.has_flag( "PERSONAL" ) && !it.has_flag( "AURA" ) &&
+        !it.has_flag( "SEMITANGIBLE" ) ) {
         // Checks to see if the player is wearing shoes
         return ret_val<bool>::make_failure( ( is_player() ? _( "You're already wearing footwear!" )
                                               : string_format( _( "%s is already wearing footwear!" ), name ) ) );
     }
 
     if( it.covers( bp_head ) &&
-        !it.has_flag( "HELMET_COMPAT" ) &&
-        !it.has_flag( "SKINTIGHT" ) &&
-        !it.has_flag( "OVERSIZE" ) &&
+        !it.has_flag( "HELMET_COMPAT" ) && !it.has_flag( "SKINTIGHT" ) && !it.has_flag( "PERSONAL" ) &&
+        !it.has_flag( "AURA" ) && !it.has_flag( "SEMITANGIBLE" ) && !it.has_flag( "OVERSIZE" ) &&
         is_wearing_helmet() ) {
         return ret_val<bool>::make_failure( wearing_something_on( bp_head ),
                                             ( is_player() ? _( "You can't wear that with other headgear!" )
                                               : string_format( _( "%s can't wear that with other headgear!" ), name ) ) );
     }
 
-    if( it.covers( bp_head ) &&
+    if( it.covers( bp_head ) && !it.has_flag( "SEMITANGIBLE" ) &&
         ( it.has_flag( "SKINTIGHT" ) || it.has_flag( "HELMET_COMPAT" ) ) &&
         ( head_cloth_encumbrance() + it.get_encumber( *this ) > 40 ) ) {
         return ret_val<bool>::make_failure( ( is_player() ? _( "You can't wear that much on your head!" )
@@ -7700,7 +7731,7 @@ ret_val<bool> player::can_wear( const item &it ) const
         return ret_val<bool>::make_failure( _( "Can't wear that, it's filthy!" ) );
     }
 
-    if( !it.has_flag( "OVERSIZE" ) ) {
+    if( !it.has_flag( "OVERSIZE" ) && !it.has_flag( "SEMITANGIBLE" ) ) {
         for( const trait_id &mut : get_mutations() ) {
             const auto &branch = mut.obj();
             if( branch.conflicts_with_item( it ) ) {
@@ -7708,7 +7739,7 @@ ret_val<bool> player::can_wear( const item &it ) const
                                                     branch.name(), it.type_name() );
             }
         }
-        if( it.covers( bp_head ) &&
+        if( it.covers( bp_head ) && !it.has_flag( "SEMITANGIBLE" ) &&
             !it.made_of( material_id( "wool" ) ) && !it.made_of( material_id( "cotton" ) ) &&
             !it.made_of( material_id( "nomex" ) ) && !it.made_of( material_id( "leather" ) ) &&
             ( has_trait( trait_HORNS_POINTED ) || has_trait( trait_ANTENNAE ) ||
@@ -8194,7 +8225,10 @@ int player::item_wear_cost( const item &it ) const
     double mv = item_handling_cost( it );
 
     switch( it.get_layer() ) {
-        case UNDERWEAR:
+        case PERSONAL_LAYER:
+            break;
+
+        case UNDERWEAR_LAYER:
             mv *= 1.5;
             break;
 
@@ -8209,6 +8243,10 @@ int player::item_wear_cost( const item &it ) const
         case BELTED_LAYER:
             mv /= 2.0;
             break;
+
+        case AURA_LAYER:
+            break;
+
         default:
             break;
     }
@@ -9302,7 +9340,7 @@ const recipe_subset &player::get_learned_recipes() const
     return *learned_recipes;
 }
 
-const recipe_subset player::get_recipes_from_books( const inventory &crafting_inv ) const
+recipe_subset player::get_recipes_from_books( const inventory &crafting_inv ) const
 {
     recipe_subset res;
 
@@ -9318,7 +9356,7 @@ const recipe_subset player::get_recipes_from_books( const inventory &crafting_in
     return res;
 }
 
-const std::set<itype_id> player::get_books_for_recipe( const inventory &crafting_inv,
+std::set<itype_id> player::get_books_for_recipe( const inventory &crafting_inv,
         const recipe *r ) const
 {
     std::set<itype_id> book_ids;
@@ -9338,7 +9376,7 @@ const std::set<itype_id> player::get_books_for_recipe( const inventory &crafting
     return book_ids;
 }
 
-const recipe_subset player::get_available_recipes( const inventory &crafting_inv,
+recipe_subset player::get_available_recipes( const inventory &crafting_inv,
         const std::vector<npc *> *helpers ) const
 {
     recipe_subset res( get_learned_recipes() );
@@ -10251,7 +10289,8 @@ bool player::wearing_something_on( body_part bp ) const
 bool player::natural_attack_restricted_on( body_part bp ) const
 {
     for( auto &i : worn ) {
-        if( i.covers( bp ) && !i.has_flag( "ALLOWS_NATURAL_ATTACKS" ) ) {
+        if( i.covers( bp ) && !i.has_flag( "ALLOWS_NATURAL_ATTACKS" ) && !i.has_flag( "SEMITANGIBLE" ) &&
+            !i.has_flag( "PERSONAL" ) && !i.has_flag( "AURA" ) ) {
             return true;
         }
     }
@@ -10265,9 +10304,9 @@ bool player::is_wearing_shoes( const side &which_side ) const
     if( which_side == side::LEFT || which_side == side::BOTH ) {
         left = false;
         for( const item &worn_item : worn ) {
-            if( worn_item.covers( bp_foot_l ) &&
-                !worn_item.has_flag( "BELTED" ) &&
-                !worn_item.has_flag( "SKINTIGHT" ) ) {
+            if( worn_item.covers( bp_foot_l ) && !worn_item.has_flag( "BELTED" ) &&
+                !worn_item.has_flag( "PERSONAL" ) && !worn_item.has_flag( "AURA" ) &&
+                !worn_item.has_flag( "SEMITANGIBLE" ) && !worn_item.has_flag( "SKINTIGHT" ) ) {
                 left = true;
                 break;
             }
@@ -10276,9 +10315,9 @@ bool player::is_wearing_shoes( const side &which_side ) const
     if( which_side == side::RIGHT || which_side == side::BOTH ) {
         right = false;
         for( const item &worn_item : worn ) {
-            if( worn_item.covers( bp_foot_r ) &&
-                !worn_item.has_flag( "BELTED" ) &&
-                !worn_item.has_flag( "SKINTIGHT" ) ) {
+            if( worn_item.covers( bp_foot_r ) && !worn_item.has_flag( "BELTED" ) &&
+                !worn_item.has_flag( "PERSONAL" ) && !worn_item.has_flag( "AURA" ) &&
+                !worn_item.has_flag( "SEMITANGIBLE" ) && !worn_item.has_flag( "SKINTIGHT" ) ) {
                 right = true;
                 break;
             }
@@ -10290,9 +10329,8 @@ bool player::is_wearing_shoes( const side &which_side ) const
 bool player::is_wearing_helmet() const
 {
     for( const item &i : worn ) {
-        if( i.covers( bp_head ) &&
-            !i.has_flag( "HELMET_COMPAT" ) &&
-            !i.has_flag( "SKINTIGHT" ) &&
+        if( i.covers( bp_head ) && !i.has_flag( "HELMET_COMPAT" ) && !i.has_flag( "SKINTIGHT" ) &&
+            !i.has_flag( "PERSONAL" ) && !i.has_flag( "AURA" ) && !i.has_flag( "SEMITANGIBLE" ) &&
             !i.has_flag( "OVERSIZE" ) ) {
             return true;
         }
@@ -10305,8 +10343,8 @@ int player::head_cloth_encumbrance() const
     int ret = 0;
     for( auto &i : worn ) {
         const item *worn_item = &i;
-        if( i.covers( bp_head ) && ( worn_item->has_flag( "HELMET_COMPAT" ) ||
-                                     worn_item->has_flag( "SKINTIGHT" ) ) ) {
+        if( i.covers( bp_head ) && !i.has_flag( "SEMITANGIBLE" ) &&
+            ( worn_item->has_flag( "HELMET_COMPAT" ) || worn_item->has_flag( "SKINTIGHT" ) ) ) {
             ret += worn_item->get_encumber( *this );
         }
     }
@@ -11093,8 +11131,13 @@ void player::burn_move_stamina( int moves )
 void player::forced_dismount()
 {
     remove_effect( effect_riding );
+    bool mech = false;
     if( mounted_creature ) {
         auto mon = mounted_creature.get();
+        if( mon->has_flag( MF_RIDEABLE_MECH ) && !mon->type->mech_weapon.empty() ) {
+            mech = true;
+            remove_item( g->u.weapon );
+        }
         mon->remove_effect( effect_ridden );
         mounted_creature = nullptr;
     }
@@ -11106,7 +11149,11 @@ void player::forced_dismount()
     }
     if( !valid.empty() ) {
         setpos( random_entry( valid ) );
-        add_msg( m_bad, _( "You fall off your mount!" ) );
+        if( mech ) {
+            add_msg( m_bad, _( "You are ejected from your mech!" ) );
+        } else {
+            add_msg( m_bad, _( "You fall off your mount!" ) );
+        }
         const int dodge = get_dodge();
         const int damage = std::max( 0, rng( 1, 20 ) - rng( dodge, dodge * 2 ) );
         body_part hit = num_bp;
@@ -11155,6 +11202,10 @@ void player::forced_dismount()
     } else {
         add_msg( m_debug, "Forced_dismount could not find a square to deposit player" );
     }
+    if( g->u.get_grab_type() != OBJECT_NONE ) {
+        add_msg( m_warning, _( "You let go of the grabbed object." ) );
+        g->u.grab( OBJECT_NONE );
+    }
     moves -= 150;
     set_movement_mode( PMM_WALK );
     g->update_map( g->u );
@@ -11162,7 +11213,7 @@ void player::forced_dismount()
 
 void player::dismount()
 {
-    if( has_effect( effect_riding ) && mounted_creature != nullptr ) {
+    if( is_mounted() ) {
         if( const cata::optional<tripoint> pnt = choose_adjacent( _( "Dismount where?" ) ) ) {
             if( g->is_empty( *pnt ) ) {
                 tripoint temp_pt = *pnt;
@@ -11170,11 +11221,19 @@ void player::dismount()
                 int ydiff = pos().y - temp_pt.y;
                 remove_effect( effect_riding );
                 monster *critter = mounted_creature.get();
+                if( critter->has_flag( MF_RIDEABLE_MECH ) && !critter->type->mech_weapon.empty() ) {
+                    remove_item( g->u.weapon );
+                }
+                if( g->u.get_grab_type() != OBJECT_NONE ) {
+                    add_msg( m_warning, _( "You let go of the grabbed object." ) );
+                    g->u.grab( OBJECT_NONE );
+                }
                 critter->remove_effect( effect_ridden );
                 mounted_creature = nullptr;
                 setpos( *pnt );
                 g->refresh_all();
-                critter->setpos( tripoint( pos().x - xdiff, pos().y - ydiff, pos().z ) );
+                critter->setpos( tripoint( pos().x + xdiff, pos().y + ydiff, pos().z ) );
+                critter->add_effect( effect_controlled, 5_turns );
                 mod_moves( -100 );
                 set_movement_mode( PMM_WALK );
                 return;

@@ -428,7 +428,7 @@ veh_collision vehicle::part_collision( int part, const tripoint &p,
 {
     // Vertical collisions need to be handled differently
     // All collisions have to be either fully vertical or fully horizontal for now
-    const bool vert_coll = bash_floor || p.z != smz;
+    const bool vert_coll = bash_floor || p.z != sm_pos.z;
     const bool pl_ctrl = player_in_control( g->u );
     Creature *critter = g->critter_at( p, true );
     player *ph = dynamic_cast<player *>( critter );
@@ -1218,7 +1218,7 @@ vehicle *vehicle::act_on_map()
             g->setremoteveh( nullptr );
         }
 
-        g->m.on_vehicle_moved( smz );
+        g->m.on_vehicle_moved( sm_pos.z );
         // Destroy vehicle (sank to nowhere)
         g->m.destroy_vehicle( this );
         return nullptr;
@@ -1427,7 +1427,7 @@ float map::vehicle_wheel_traction( const vehicle &veh ) const
         }
 
         for( const auto &terrain_mod : veh.part_info( p ).wheel_terrain_mod() ) {
-            if( terrain_mod.second.movecost && terrain_mod.second.movecost > 0 &&
+            if( terrain_mod.second.movecost > 0 &&
                 tr.has_flag( terrain_mod.first ) ) {
                 move_mod = terrain_mod.second.movecost;
                 break;
