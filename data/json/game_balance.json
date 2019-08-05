@@ -46,14 +46,14 @@
     "name": "PLAYER_THIRST_RATE",
     "info": "Set base thirst rate per 5 minutes. Default: 1.0",
     "stype": "float",
-    "value": 1.0
+    "value": 0.7
   },
   {
     "type": "EXTERNAL_OPTION",
     "name": "PLAYER_FATIGUE_RATE",
     "info": "Set base fatigue rate per 5 minutes. Default: 1.0",
     "stype": "float",
-    "value": 1.0
+    "value": 0.85
   },
   {
     "type": "EXTERNAL_OPTION",
@@ -74,14 +74,14 @@
     "name": "PLAYER_STAMINA_PENALTY",
     "info": "How much will decrease stamina pool by using 1 stamina point.  Default: 0.01.  Set to 0 to turn it off.",
     "stype": "float",
-    "value": 0.001
+    "value": 0.01
   },
   {
     "type": "EXTERNAL_OPTION",
     "name": "PLAYER_RECOVER_STAMINA_INCREASE_HUNGER",
-    "info": "How much hunger will be added for recovering 1 stamina point.  Default: 0.008.  Set to 0 to turn it off.",
+    "info": "How many kcal will be removed for recovering 1 stamina point (*8.7 from nutritions).  Default: 0.008.  Set to 0 to turn it off.",
     "stype": "float",
-    "value": 0.0008
+    "value": 0.007
   },
   {
     "type": "EXTERNAL_OPTION",

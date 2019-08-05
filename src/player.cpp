@@ -3773,6 +3773,8 @@ void player::update_stomach( const time_point &from, const time_point &to )
             mod_stored_kcal( dcalorie );
         }
     }
+    //add_msg( "limit %s %s ", limit_upper, limit_lower );
+    //add_msg( "bmi %s ", get_bmi() );
 
     hunger_mod += -1.0f * ( get_stored_kcal_buffer() - ( limit_upper + limit_lower ) / 2 ) / ( ( limit_upper - limit_lower ) / 2  ) * 30;
     hunger_mod += -100 * stomach.contains() / stomach.capacity();

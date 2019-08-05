@@ -118,8 +118,8 @@
       "shore_extendable_overmap_terrain": [ "forest", "forest_thick", "forest_water", "field" ]
     },
     "overmap_forest_settings": {
-      "noise_threshold_forest": 0.2,
-      "noise_threshold_forest_thick": 0.25,
+      "noise_threshold_forest": 0.1,
+      "noise_threshold_forest_thick": 0.1,
       "noise_threshold_swamp_adjacent_water": 0.3,
       "noise_threshold_swamp_isolated": 0.6,
       "river_floodplain_buffer_distance_min": 3,
@@ -211,8 +211,7 @@
               "t_pit": 1,
               "t_pit_shallow": 1
             }
-          },
-          "water": { "sequence": 3, "chance": 512, "clear_types": false, "types": { "t_water_sh": 1 } }
+          }
         },
         "clear_terrain_furniture": false,
         "terrain_furniture": {  }
@@ -302,8 +301,7 @@
               "t_pit": 1,
               "t_pit_shallow": 1
             }
-          },
-          "water": { "sequence": 3, "chance": 512, "clear_types": false, "types": { "t_water_sh": 1 } }
+          }
         },
         "clear_terrain_furniture": false,
         "terrain_furniture": {  }
@@ -579,8 +577,7 @@
         "school": 15,
         "motel_city": 10,
         "fishing_pond_city": 10,
-        "trailerpark_city": 15,
-        "railroad_city": 10
+        "trailerpark_city": 15
       },
       "basements": { "basement": 1000, "basement_hidden_lab_stairs": 25, "basement_bionic": 50 },
       "parks": {
@@ -803,7 +800,7 @@
     },
     "weather": {
       "base_temperature": 6.5,
-      "base_humidity": 66.0,
+      "base_humidity": 40.0,
       "base_pressure": 1015.0,
       "base_acid": 0.0,
       "base_wind": 5.7,
