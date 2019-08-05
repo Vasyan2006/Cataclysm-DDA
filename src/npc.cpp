@@ -401,6 +401,8 @@ void npc::randomize( const npc_class_id &type )
     for( int i = 0; i < num_hp_parts; i++ ) {
         hp_cur[i] = hp_max[i];
     }
+    set_stored_kcal( get_healthy_kcal() );
+    set_stored_kcal_buffer( get_healthy_kcal_buffer() );
 
     starting_weapon( myclass );
     starting_clothes( *this, myclass, male );

@@ -1461,6 +1461,7 @@ void player::temp_equalizer( body_part bp1, body_part bp2 )
 
 int player::kcal_speed_penalty()
 {
+    /*
     static const std::vector<std::pair<float, float>> starv_thresholds = { {
             std::make_pair( 0.0f, -90.0f ),
             std::make_pair( character_weight_category::emaciated, -50.f ),
@@ -1474,6 +1475,9 @@ int player::kcal_speed_penalty()
     } else {
         return round( multi_lerp( starv_thresholds, get_bmi() ) );
     }
+    */
+    return 0;
+
 }
 
 int player::thirst_speed_penalty( int thirst )
@@ -1977,20 +1981,19 @@ void player::mod_stat( const std::string &stat, float modifier )
     } else if( stat == "stored_kcal_buffer" ) {
         mod_stored_kcal_buffer( modifier );
     } else if( stat == "stamina" ) {
-        /*if( stamina + modifier < 0 ) {
-            add_effect( effect_winded, 10_turns );
-        }*/
-        if( modifier < 0 ) {
-            // increase calorie consumption, but not fatigue for hulks
-            stamina_used += -modifier * to_kilogram( bodyweight() ) / init_weight;
-            stamina_used_fatigue += -modifier;
-        }
+        if( !is_npc() ) {
+            if( modifier < 0 ) {
+                // weight increases calorie consumption, but not fatigue
+                stamina_used += -modifier * bodyweight_to_init();
+                stamina_used_fatigue += -modifier;
+            }
 
-        // increase stamina use for fat
-        if( to_kilogram( bodyweight() ) > to_kilogram( bodyweight_base() ) ) {
-            modifier *= to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() );
+            // overweight increases stamina use
+            if(  bodyweight_to_base() > 1 ) {
+                modifier *= bodyweight_to_base();
+            }
         }
-        stamina += modifier * to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() );
+        stamina += modifier;
 
         stamina = std::min( stamina, get_stamina_max() - get_stamina_max_penalty() );
         stamina = std::max( 0, stamina );
@@ -3733,17 +3736,14 @@ void player::update_stomach( const time_point &from, const time_point &to )
     const float kcal_per_time = get_bmr() / ( 12.0f * 24.0f );
     const int five_mins = ticks_between( from, to, 5_minutes );
 
-  //  update_hunger();
-
     int hunger_mod = 0;
-    int limit_upper = get_healthy_kcal_buffer() * units::to_kilogram( bodyweight_base() ) / init_weight;
-    int limit_lower = get_healthy_kcal_buffer() / 2 * units::to_kilogram( bodyweight_base() ) / init_weight;
+    int limit_upper = get_healthy_kcal_buffer();
+    int limit_lower = limit_upper / 2;
 
     if( five_mins > 0 ) {
         stomach.absorb_water( *this, 250_ml * five_mins );
         guts.absorb_water( *this, 250_ml * five_mins );
 
- //       add_msg( "buffer %s", get_stored_kcal_buffer() );
         // the stomach does not currently have rates of absorption, but this is where it goes
         stomach.calculate_absorbed( stomach.get_absorb_rates( true, rates ) );
         guts.calculate_absorbed( guts.get_absorb_rates( false, rates ) );
@@ -3758,179 +3758,29 @@ void player::update_stomach( const time_point &from, const time_point &to )
             mod_stored_kcal_buffer( -roll_remainder( five_mins * kcal_per_time ) );
         }
 
-
-        /**
-        // store
-        double timerate = 500.0f;
-        if(  get_stored_kcal() < get_healthy_kcal() ) {
-            double mod = 1.0f  + 4.0f * ( get_healthy_kcal() - get_stored_kcal() ) / get_healthy_kcal();
-            timerate /= mod;
-        }
-
-        int dcalorie = get_stored_kcal_buffer() / timerate;
-        mod_stored_kcal( dcalorie );
-        // recover only 50% cal from fat
-        dcalorie *= ( dcalorie < 0 ) ? 0.5f : 1;
-        mod_stored_kcal_buffer( -dcalorie );
-
-
-
-        int dcalorie = ( get_stored_kcal_buffer() - get_healthy_kcal_buffer() ) / timerate;
-
-        mod_stored_kcal( -dcalorie );
-        // recover only 50% cal from fat
-        dcalorie *= ( dcalorie < 0 ) ? 0.5f : 1;
-        mod_stored_kcal_buffer( dcalorie );
-
-**/
         float timerate  = 250.0f;
         int dcalorie = 0;
 
         if( get_stored_kcal_buffer() > limit_upper ) {
-           // timerate = 500.0f;
-            dcalorie = ( get_stored_kcal_buffer() - limit_upper ) / timerate;
+            dcalorie = ( get_stored_kcal_buffer() - limit_upper ) / timerate * metabolic_rate_base();
             mod_stored_kcal_buffer( -dcalorie );
-            float fat_coeff = pow( 10, to_kilogram( bodyweight() ) / to_kilogram( bodyweight_base() ) - 1 );
+            float fat_coeff = pow( 10, bodyweight_to_base() - 1 );
             mod_stored_kcal( dcalorie * 0.5f / fat_coeff );
-            // add_msg( "fat_coeff %s ", fat_coeff );
         } else if( get_stored_kcal_buffer() < limit_lower ) {
             timerate = 100.0f;
-            dcalorie = ( get_stored_kcal_buffer() - limit_lower ) / timerate;
-            //dcalorie *= get_stored_kcal_buffer() / get_healthy_kcal_buffer() * 2;
+            dcalorie = ( get_stored_kcal_buffer() - limit_lower ) / timerate * metabolic_rate_base();
             mod_stored_kcal_buffer( -dcalorie * 0.5f );
             mod_stored_kcal( dcalorie );
         }
-
-
-       // add_msg( "dcalorie %s ", dcalorie );
-       // add_msg( "buffer %s ",get_stored_kcal_buffer() );
-
-
-      //  add_msg( "hunger %s %s %s", get_stored_kcal_buffer(), get_stored_kcal(), get_healthy_kcal_buffer()  );
-
-      //  add_msg( "bodyweight %s ", bodyweight_relative() );
-
-      //  add_msg( "bmi %s ", get_bmi() );
-
-      //  add_msg( "height %s %s ", height(), to_kilogram( bodyweight() ) );
-
-
-
     }
 
     hunger_mod += -1.0f * ( get_stored_kcal_buffer() - ( limit_upper + limit_lower ) / 2 ) / ( ( limit_upper - limit_lower ) / 2  ) * 30;
     hunger_mod += -100 * stomach.contains() / stomach.capacity();
-    //add_msg( "hunger %s", hunger_mod );
+
     set_hunger( hunger_mod );
 
-
-    // Full
-    // Engorged
-
-/*
-    if( get_stored_kcal_buffer() > 2000 ) {
-        hunger_mod += -60;
-        // Full
-    if( get_stored_kcal_buffer() > 1700 ) {
-        hunger_mod += -60;
-        // Sated
-    } else if( get_stored_kcal_buffer() < 1300 ) {
-        hunger_mod += 50;
-        // Hungry
-    } else if( get_stored_kcal_buffer() < 1000 ) {
-        hunger_mod += 50;
-        // Very hungry
-    } else if( get_stored_kcal_buffer() < 800 ) {
-        hunger_mod += 50;
-        // Famished
-    } else if( get_stored_kcal_buffer() < 600 ) {
-        hunger_mod += 100;
-        // Near Famished
-    } else if( get_stored_kcal_buffer() < 400 ) {
-        hunger_mod += 150;
-        // Near starving
-    } else if( get_stored_kcal_buffer() < 200 ) {
-        hunger_mod += 200;
-        // Starving!
-    }
-    */
-
-
-/*
-    if( get_stored_kcal_buffer() > 1500 ) {
-        hunger_mod += -( get_stored_kcal_buffer() - limit_lower ) * 0.1;
-    } else {
-        hunger_mod += -( get_stored_kcal_buffer() - 1500 ) * 0.1;
-    }
-    */
-
-
-
-    /*
-    if( stomach.contains() >= stomach.capacity() ) {
-        // you're engorged! your stomach is full to bursting!
-        hunger_mod += -50;
-    } else if( stomach.contains() >= stomach.capacity() / 2 ) {
-        // sated
-        hunger_mod += -20;
-    } else if( stomach.contains() >= stomach.capacity() / 8 ) {
-        // that's really all the food you need to feel full
-        hunger_mod += -10;
-    }
-    */
-
-
-
-
-
-/**
-    if( stomach.time_since_ate() > 10_minutes ) {
-        if( stomach.contains() >= stomach.capacity() && get_hunger() > -61 ) {
-            // you're engorged! your stomach is full to bursting!
-            set_hunger( -61 );
-        } else if( stomach.contains() >= stomach.capacity() / 2 && get_hunger() > -21 ) {
-            // sated
-            set_hunger( -21 );
-        } else if( stomach.contains() >= stomach.capacity() / 8 && get_hunger() > -1 ) {
-            // that's really all the food you need to feel full
-            set_hunger( -1 );
-        } else if( stomach.contains() == 0_ml ) {
-            if( guts.get_calories() == 0 && guts.get_calories_absorbed() == 0 &&
-                get_stored_kcal() < get_healthy_kcal() && get_hunger() < 300 ) {
-                // there's no food except what you have stored in fat
-                set_hunger( 300 );
-            } else if( get_hunger() < 100 && ( ( guts.get_calories() == 0 &&
-                                                 guts.get_calories_absorbed() == 0 &&
-                                                 get_stored_kcal() >= get_healthy_kcal() ) || get_stored_kcal() < get_healthy_kcal() ) ) {
-                set_hunger( 100 );
-            } else if( get_hunger() < 0 ) {
-                set_hunger( 0 );
-            }
-        }
-
-    } else
-        // you fill up when you eat fast, but less so than if you eat slow
-        // if you just ate but your stomach is still empty it will still
-        // delay your filling up (drugs?)
-    {
-        if( stomach.contains() >= stomach.capacity() && get_hunger() > -61 ) {
-            // you're engorged! your stomach is full to bursting!
-            set_hunger( -61 );
-        } else if( stomach.contains() >= stomach.capacity() * 3 / 4 && get_hunger() > -21 ) {
-            // sated
-            set_hunger( -21 );
-        } else if( stomach.contains() >= stomach.capacity() / 2 && get_hunger() > -1 ) {
-            // that's really all the food you need to feel full
-            set_hunger( -1 );
-        } else if( stomach.contains() > 0_ml && get_kcal_percent() > 0.95 ) {
-            // usually eating something cools your hunger
-            set_hunger( 0 );
-        }
-    }
-*/
-
     if( !foodless && rates.thirst > 0.0f ) {
-        mod_thirst( roll_remainder( rates.thirst * five_mins ) );
+        mod_thirst( roll_remainder( rates.thirst * five_mins * units::to_kilogram( bodyweight_base() ) / init_weight) );
     }
     // Mycus and Metabolic Rehydration makes thirst unnecessary
     // since water is not limited by intake but by absorption, we can just set thirst to zero
@@ -4499,7 +4349,7 @@ void player::regen( int rate_multiplier )
 
 void player::update_stamina( int turns )
 {
-    //add_msg( "stamina_used %s", stamina_used );
+   // add_msg( "stamina_used %s", stamina_used );
     float stamina_recovery = 0.0f;
     // Recover some stamina every turn.
     // Mutated stamina works even when winded
@@ -11993,71 +11843,8 @@ void player::do_skill_rust()
 
 std::pair<std::string, nc_color> player::get_hunger_description() const
 {
-    //const bool calorie_deficit = get_bmi() < character_weight_category::normal;
-    //const units::volume contains = stomach.contains();
-    //const units::volume cap = stomach.capacity();
     std::string hunger_string;
     nc_color hunger_color = c_white;
-    /*
-    // i ate just now!
-    const bool just_ate = stomach.time_since_ate() < 15_minutes;
-    // i ate a meal recently enough that i shouldn't need another meal
-    const bool recently_ate = stomach.time_since_ate() < 3_hours;
-
-
-    if( calorie_deficit ) {
-        if( contains >= cap ) {
-            hunger_string = _( "Engorged" );
-            hunger_color = c_green;
-        } else if( contains > cap * 3 / 4 ) {
-            hunger_string = _( "Sated" );
-            hunger_color = c_green;
-        } else if( just_ate && contains > cap / 2 ) {
-            hunger_string = _( "Full" );
-            hunger_color = c_green;
-        } else if( just_ate ) {
-            hunger_string = _( "Hungry" );
-            hunger_color = c_yellow;
-        } else if( recently_ate ) {
-            hunger_string = _( "Very Hungry" );
-            hunger_color = c_yellow;
-        } else if( get_bmi() < character_weight_category::emaciated ) {
-            hunger_string = _( "Starving!" );
-            hunger_color = c_red;
-        } else if( get_bmi() < character_weight_category::underweight ) {
-            hunger_string = _( "Near starving" );
-            hunger_color = c_red;
-        } else {
-            hunger_string = _( "Famished" );
-            hunger_color = c_light_red;
-        }
-    } else {
-        if( contains >= cap * 5 / 6 ) {
-            hunger_string = _( "Engorged" );
-            hunger_color = c_green;
-        } else if( contains > cap * 11 / 20 ) {
-            hunger_string = _( "Sated" );
-            hunger_color = c_green;
-        } else if( recently_ate && contains >= cap * 3 / 8 ) {
-            hunger_string = _( "Full" );
-            hunger_color = c_green;
-        } else if( ( stomach.time_since_ate() > 90_minutes && contains < cap / 8 && recently_ate ) ||
-                   ( just_ate && contains > 0_ml && contains < cap * 3 / 8 ) ) {
-            hunger_string = _( "Peckish" );
-            hunger_color = c_dark_gray;
-        } else if( !just_ate && ( recently_ate || contains > 0_ml ) ) {
-            hunger_string.clear();
-        } else {
-            if( get_bmi() > character_weight_category::overweight ) {
-                hunger_string = _( "Hungry" );
-            } else {
-                hunger_string = _( "Very Hungry" );
-            }
-            hunger_color = c_yellow;
-        }
-    }
-    */
-
 
     int hunger_feel = get_hunger();
 
@@ -12087,12 +11874,9 @@ std::pair<std::string, nc_color> player::get_hunger_description() const
     } else if( hunger_feel <= 78 ) {
             hunger_string = _( "Near starving" );
             hunger_color = c_red;
-    } else if( hunger_feel <= 90 ) {
+    } else {
             hunger_string = _( "Starving" );
             hunger_color = c_red;
-    } else {
-            hunger_string = _( "PECKISH" );
-            hunger_color = c_white;
     }
 
     return std::make_pair( hunger_string, hunger_color );

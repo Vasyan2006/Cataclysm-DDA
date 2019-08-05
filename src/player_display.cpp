@@ -322,10 +322,6 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
                                           _( "Your weight is a general indicator of how much fat your body has stored up,"
                                              " which in turn shows how prepared you are to survive for a time without food."
                                              "Having too much, or too little, can be unhealthy." ) );
-        /*fold_and_print( w_info, 1 + lines, 1, FULL_SCREEN_WIDTH - 2, c_magenta,
-                        you.get_weight_description() );
-                        */
-
     }
     wrefresh( w_stats );
     wrefresh( w_info );
@@ -359,7 +355,6 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
     mvwprintz( w_stats, 4, 1, c_light_gray, _( "Intelligence:" ) );
     mvwprintz( w_stats, 5, 1, c_light_gray, _( "Perception:" ) );
     mvwprintz( w_stats, 6, 1, c_light_gray, _( "Weight:" ) );
-    //mvwprintz( w_stats, 6, 25 - you.get_weight_string().size(), c_light_gray, static_cast<int>( to_kilogram( you.bodyweight() ) ) );
     wrefresh( w_stats );
 }
 
@@ -1130,31 +1125,6 @@ void player::disp_info()
             pain_text << _( "Speed" ) << " -" << ppen.speed << "%   ";
         }
         effect_text.push_back( pain_text.str() );
-    }
-
-    const float bmi = get_bmi();
-
-    if( bmi < character_weight_category::underweight ) {
-        std::stringstream starvation_text;
-
-        if( bmi < character_weight_category::emaciated ) {
-            effect_name.push_back( _( "Severely Malnourished" ) );
-            starvation_text <<
-                            _( "Your body is severely weakened by starvation. You might die if you don't start eating regular meals!\n \n" );
-        } else {
-            effect_name.push_back( _( "Malnourished" ) );
-            starvation_text <<
-                            _( "Your body is weakened by starvation. Only time and regular meals will help you recover.\n \n" );
-        }
-
-        if( bmi < character_weight_category::underweight ) {
-            const float str_penalty = 1.0f - ( ( bmi - 13.0f ) / 3.0f );
-            starvation_text << _( "Strength" ) << " -" << string_format( "%2.0f%%\n", str_penalty * 100.0f );
-            starvation_text << _( "Dexterity" ) << " -" << string_format( "%2.0f%%\n", str_penalty * 50.0f );
-            starvation_text << _( "Intelligence" ) << " -" << string_format( "%2.0f%%", str_penalty * 50.0f );
-        }
-
-        effect_text.push_back( starvation_text.str() );
     }
 
     if( ( has_trait( trait_id( "TROGLO" ) ) && g->is_in_sunlight( pos() ) &&

@@ -149,7 +149,7 @@ Character::Character() :
     healthy_calories = 85000;
     stored_calories_buffer_default = 8000;
     stored_calories = healthy_calories;
-    stored_calories_buffer = stored_calories_buffer_default;
+    stored_calories_buffer = stored_calories_buffer_default; //get_healthy_kcal_buffer();
     initialize_stomach_contents();
     healed_total = { { 0, 0, 0, 0, 0, 0 } };
 
@@ -2105,13 +2105,13 @@ void Character::set_stored_kcal( int kcal )
 
 int Character::get_healthy_kcal() const
 {
-    return healthy_calories;
+    return healthy_calories * to_kilogram( bodyweight_base() ) / init_weight;
 }
 
 
 int Character::get_healthy_kcal_buffer() const
 {
-    return stored_calories_buffer_default;
+    return stored_calories_buffer_default * to_kilogram( bodyweight_base() ) / init_weight;
 }
 
 
@@ -2353,10 +2353,6 @@ void Character::reset_bonuses()
 
 int Character::get_max_healthy() const
 {
-    /**
-    const float bmi = get_bmi();
-    return clamp( static_cast<int>( round( -3 * ( bmi - 18.5 ) * ( bmi - 25 ) + 200 ) ), -200, 200 );
-    **/
     return 200;
 }
 
@@ -3264,7 +3260,6 @@ float Character::healing_rate_medicine( float at_rest_quality, const body_part b
 
 float Character::get_bmi() const
 {
-   // return 12 * get_kcal_percent() + 13;
    return units::to_kilogram( bodyweight() ) / pow( height() / 100.0f, 2 );
 }
 
@@ -3338,25 +3333,23 @@ std::string Character::get_weight_description() const
 
 units::mass Character::bodyweight() const
 {
-   // double weight = get_str_base()
-
-    //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
-    //return units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height  );
-    //10 kcal = 1 gramm
+    //9 kcal = 1 gramm
     return units::from_kilogram( to_kilogram( bodyweight_base() ) + ( get_stored_kcal() - get_healthy_kcal() ) * 0.00011f );
 }
 
 units::mass Character::bodyweight_base() const
 {
-    //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
     return units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height );
 }
 
-float Character::bodyweight_relative() const
+float Character::bodyweight_to_base() const
 {
-    //return units::from_kilogram( get_bmi() * pow( height() / 100.0f, 2 ) );
     return static_cast<float>( units::to_kilogram( bodyweight() ) ) / static_cast<float>( units::to_kilogram( bodyweight_base() ) );
-    //units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height );
+}
+
+float Character::bodyweight_to_init() const
+{
+    return static_cast<float>( units::to_kilogram( bodyweight() ) ) / init_weight;
 }
 
 int Character::height() const
@@ -3387,15 +3380,7 @@ int Character::height() const
 
 int Character::get_bmr() const
 {
-    /**
-    Values are for males, and average!
-    const int age = 25;
-    const int equation_constant = 5;
-    return ceil( metabolic_rate_base() * activity_level * ( units::to_gram<int>
-                 ( bodyweight() / 100.0 ) +
-                 ( 6.25 * height() ) - ( 5 * age ) + equation_constant ) );
-                 */
-    return 1800 * units::to_kilogram( bodyweight_base() ) / init_weight * metabolic_rate_base();
+    return 1800 * bodyweight_to_init() * metabolic_rate_base();
 }
 
 void Character::increase_activity_level( float new_level )

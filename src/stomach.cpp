@@ -83,7 +83,7 @@ units::volume stomach_contents::capacity() const
     if( g->u.has_trait( trait_id( "SLIMESPAWNER" ) ) ) {
         max_mod *= 3;
     }
-    return max_volume * max_mod;
+    return max_volume * max_mod * g->u.bodyweight_to_init();
 }
 
 units::volume stomach_contents::stomach_remaining() const
@@ -438,7 +438,4 @@ void Character::initialize_stomach_contents()
 {
     stomach = stomach_contents( 2500_ml );
     guts = stomach_contents( 24000_ml );
-    guts.set_calories( 300 );
-    stomach.set_calories( 800 );
-    stomach.mod_contents( 475_ml );
 }

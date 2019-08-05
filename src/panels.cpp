@@ -1442,6 +1442,14 @@ static void draw_health_classic( avatar &u, const catacurses::window &w )
             mvwprintz( w, 5, 26, col_vel, "%d", c_speed );
             mvwprintz( w, 5, 26 + offset, c_light_gray, ">" );
             mvwprintz( w, 5, 28 + offset, c_light_green, "%d", t_speed );
+        } else {
+            nc_color col_vel = strain <= 0 ? c_light_blue :
+                               ( strain <= 0.2 ? c_yellow :
+                                 ( strain <= 0.4 ? c_light_red : c_red ) );
+            int c_speed = static_cast<int>( convert_velocity( veh->velocity, VU_VEHICLE ) );
+            const std::string type = get_option<std::string>( "USE_METRIC_SPEEDS" );
+            mvwprintz( w, 5, 21, c_light_gray, type );
+            mvwprintz( w, 5, 26, col_vel, "%d", c_speed );
         }
     }
 
@@ -1585,6 +1593,11 @@ static void draw_veh_padding( const avatar &u, const catacurses::window &w )
             mvwprintz( w, 0, 20, c_light_green, "%d", t_speed );
             mvwprintz( w, 0, 21 + offset, c_light_gray, "%s", ">" );
             mvwprintz( w, 0, 23 + offset, col_vel, "%d", c_speed );
+        } else {
+            const std::string type = get_option<std::string>( "USE_METRIC_SPEEDS" );
+            mvwprintz( w, 0, 13, c_light_gray, "%s :", type );
+            int c_speed = static_cast<int>( convert_velocity( veh->velocity, VU_VEHICLE ) );
+            mvwprintz( w, 0, 20, col_vel, "%d", c_speed );
         }
     }
 

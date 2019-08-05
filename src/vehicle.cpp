@@ -4059,10 +4059,6 @@ void vehicle::consume_fuel( int load, const int t_seconds, bool skip_electric )
             g->u.charge_power( ( load / 20 ) > 1 ? -( load / 20 ) : -1 );
             mod -= ( load / 5 ) > 5 ? ( load / 5 ) : 5;
         }
-        /*if( one_in( 1000 / load ) && one_in( 10 ) ) {
-            g->u.mod_thirst( 1 );
-            g->u.mod_fatigue( 1 );
-        }*/
         g->u.mod_stat( "stamina", -( base_burn + mod ) );
         add_msg( m_debug, "Load: %d", load );
         add_msg( m_debug, "Mod: %d", mod );

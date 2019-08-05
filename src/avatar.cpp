@@ -1352,6 +1352,7 @@ void avatar::reset_stats()
         set_fake_effect_dur( effect_stim_overdose, 1_turns * ( stim - 30 ) );
     }
     // Starvation
+    /*
     const float bmi = get_bmi();
     if( bmi < character_weight_category::underweight ) {
         const int str_penalty = floor( ( 1.0f - ( bmi - 13.0f ) / 3.0f ) * get_str_base() ) + 0.5f;
@@ -1361,6 +1362,7 @@ void avatar::reset_stats()
         mod_dex_bonus( -( str_penalty / 2 ) );
         mod_int_bonus( -( str_penalty / 2 ) );
     }
+    */
     // Thirst
     if( get_thirst() >= 200 ) {
         // We die at 1200

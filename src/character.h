@@ -844,7 +844,8 @@ class Character : public Creature, public visitable<Character>
         // returns bodyweight of the Character
         units::mass bodyweight() const;
         units::mass bodyweight_base() const;
-        float bodyweight_relative() const;
+        float bodyweight_to_base() const;
+        float bodyweight_to_init() const;
         // increases the activity level to the next level
         // does not decrease activity level
         void increase_activity_level( float new_level );
