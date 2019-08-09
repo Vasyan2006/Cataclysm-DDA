@@ -648,6 +648,7 @@ void character_edit_menu()
             smenu.addentry( 4, true, 'd', "%s: %d", _( "Sleep Deprivation" ), p.get_sleep_deprivation() );
             smenu.addentry( 5, true, 'a', _( "Reset all basic needs" ) );
             smenu.addentry( 6, true, 's', "%s: %d", _( "Stored kCal buffer" ), p.get_stored_kcal_buffer() );
+            smenu.addentry( 7, true, 's', "%s: %d", _( "Stored kCal b00bs" ), p.get_stored_kcal_b00bs() );
 
             const auto &vits = vitamin::all();
             for( const auto &v : vits ) {
@@ -698,6 +699,11 @@ void character_edit_menu()
                 case 6:
                     if( query_int( value, _( "Set stored kCal buffer to? Currently: %d" ), p.get_stored_kcal_buffer() ) ) {
                         p.set_stored_kcal_buffer( value );
+                    }
+                    break;
+                 case 7:
+                    if( query_int( value, _( "Set stored kCal b00bs to? Currently: %d" ), p.get_stored_kcal_b00bs() ) ) {
+                        p.set_stored_kcal_b00bs( value );
                     }
                     break;
                 default:

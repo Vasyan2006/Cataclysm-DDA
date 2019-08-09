@@ -391,6 +391,9 @@ void Character::load( JsonObject &data )
     if( !data.read( "stored_calories_buffer", stored_calories_buffer ) ) {
         stored_calories_buffer = stored_calories_buffer_default;
     }
+    if( !data.read( "stored_calories_b00bs", stored_calories_b00bs ) ) {
+        stored_calories_b00bs = 0;
+    }
     data.read( "radiation", radiation );
     data.read( "oxygen", oxygen );
 
@@ -558,6 +561,7 @@ void Character::store( JsonOut &json ) const
     json.member( "sleep_deprivation", sleep_deprivation );
     json.member( "stored_calories", stored_calories );
     json.member( "stored_calories_buffer", stored_calories_buffer );
+    json.member( "stored_calories_b00bs", stored_calories_b00bs );
     json.member( "radiation", radiation );
     json.member( "stamina", stamina );
     json.member( "stamina_max_penalty", stamina_max_penalty );

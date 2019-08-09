@@ -6411,5 +6411,26 @@
     "description": "Spending any amount of time in familiar places makes you miserable.  Must.  Keep.  Moving.",
     "prereqs": [ "NOMAD2" ],
     "category": [ "CHIMERA" ]
+  },
+  {
+    "type": "mutation",
+    "id": "BODYPOSITIVE",
+    "name": "Bodypositive",
+    "points": 0,
+    "starting_trait": true,
+    "description": "You are very strong, independent and beautiful!",
+	"cancels": [ "BODYNEGATIVE" ],
+	"hunger_modifier": 60,
+	"fat_grow_penalty_modifier": 0
+  },
+  {
+    "type": "mutation",
+    "id": "BODYNEGATIVE",
+    "name": "Bodynegative",
+    "points": 0,
+    "starting_trait": true,
+    "description": "Your hunger feel is slightly reduced.",
+	"cancels": [ "BODYPOSITIVE" ],
+	"hunger_modifier": -15
   }
 ]

@@ -1351,18 +1351,16 @@ void avatar::reset_stats()
     } else {
         set_fake_effect_dur( effect_stim_overdose, 1_turns * ( stim - 30 ) );
     }
+
     // Starvation
-    /*
-    const float bmi = get_bmi();
-    if( bmi < character_weight_category::underweight ) {
-        const int str_penalty = floor( ( 1.0f - ( bmi - 13.0f ) / 3.0f ) * get_str_base() );
-        add_miss_reason( _( "You're weak from hunger." ),
-                         static_cast<unsigned>( ( get_starvation() + 300 ) / 1000 ) );
-        mod_str_bonus( -str_penalty );
-        mod_dex_bonus( -( str_penalty / 2 ) );
-        mod_int_bonus( -( str_penalty / 2 ) );
+    // copypaste from player_display.cpp disp_info() // Starvation
+    if( get_stored_kcal() < get_healthy_kcal() ) {
+        float underweight = 1.0f - 1.0f * get_stored_kcal() / get_healthy_kcal();
+        mod_str_bonus( -get_str_base() * underweight );
+        mod_dex_bonus( -get_dex_base() * underweight / 2 );
+        mod_int_bonus( -get_int_base() * underweight / 2 );
     }
-    */
+
     // Thirst
     if( get_thirst() >= 200 ) {
         // We die at 1200
@@ -1373,6 +1371,7 @@ void avatar::reset_stats()
         mod_int_bonus( -get_thirst() / 200 );
         mod_per_bonus( -get_thirst() / 200 );
     }
+
     if( get_sleep_deprivation() >= SLEEP_DEPRIVATION_HARMLESS ) {
         set_fake_effect_dur( effect_sleep_deprived, 1_turns * get_sleep_deprivation() );
     } else if( has_effect( effect_sleep_deprived ) ) {

@@ -403,6 +403,10 @@ void npc::randomize( const npc_class_id &type )
     set_stored_kcal( get_healthy_kcal() );
     set_stored_kcal_buffer( get_healthy_kcal_buffer() );
 
+    if( !male ){
+        set_stored_kcal_b00bs( get_stored_kcal_b00bs_healthy() );
+    }
+
     starting_weapon( myclass );
     starting_clothes( *this, myclass, male );
     starting_inv( *this, myclass );

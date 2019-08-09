@@ -659,11 +659,13 @@ bool avatar::create( character_type type, const std::string &tempname )
     set_stored_kcal( get_healthy_kcal() );
     set_stored_kcal_buffer( get_healthy_kcal_buffer() );
 
-    // update calorie buffer
-
     set_stored_kcal( get_healthy_kcal() );
     set_stored_kcal_buffer( get_healthy_kcal_buffer() );
-    //int temp = get_healthy_kcal_buffer();
+
+    if( !male ){
+        set_stored_kcal_b00bs( get_stored_kcal_b00bs_healthy() );
+    }
+
 
     return true;
 }

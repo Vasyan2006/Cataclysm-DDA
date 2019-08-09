@@ -149,7 +149,8 @@ Character::Character() :
     healthy_calories = 85000;
     stored_calories_buffer_default = 8000;
     stored_calories = healthy_calories;
-    stored_calories_buffer = stored_calories_buffer_default; //get_healthy_kcal_buffer();
+    stored_calories_buffer = stored_calories_buffer_default;
+    stored_calories_b00bs = 0;
     initialize_stomach_contents();
     healed_total = { { 0, 0, 0, 0, 0, 0 } };
 
@@ -1918,6 +1919,8 @@ void Character::mut_cbm_encumb( std::array<encumbrance_data, num_bp> &vals ) con
     for( const auto &mut_pair : my_mutations ) {
         apply_mut_encumbrance( vals, *mut_pair.first, oversize );
     }
+
+    vals[bp_torso].encumbrance += get_b00bs_encumbrance();;
 }
 
 body_part_set Character::exclusive_flag_coverage( const std::string &flag ) const
@@ -2167,6 +2170,46 @@ void Character::set_stored_kcal_buffer( int kcal )
     if( stored_calories_buffer != kcal ) {
         stored_calories_buffer = kcal;
     }
+}
+
+int Character::get_stored_kcal_b00bs() const
+{
+    return stored_calories_b00bs;
+}
+
+int Character::get_stored_kcal_b00bs_healthy() const
+{
+    int ret = 0;
+    if( !male ) {
+        ret = get_stored_kcal() * 0.1f * mutation_value( "b00bs_modifier" );
+    }
+    return ret;
+}
+
+void Character::mod_stored_kcal_b00bs( int nkcal )
+{
+    set_stored_kcal_b00bs( stored_calories_b00bs + nkcal );
+}
+
+void Character::set_stored_kcal_b00bs( int kcal )
+{
+    if( stored_calories_b00bs != kcal ) {
+        stored_calories_b00bs = kcal;
+    }
+}
+
+int Character::get_b00bs_encumbrance() const
+{
+    int enc = -4 + 0.012f * to_gram( get_b00bs_weight() );
+    enc = std::max( 0, enc );
+
+    if( worn_with_flag( "BRA2" ) ) {
+        enc *= 0.33f;
+    } else if( worn_with_flag( "BRA" ) ) {
+        enc *= 0.66f;
+    }
+
+    return enc;
 }
 
 float Character::get_kcal_percent() const
@@ -3191,7 +3234,10 @@ mutation_value_map = {
     { "overmap_sight", calc_mutation_value_multiplicative<&mutation_branch::overmap_sight> },
     { "overmap_multiplier", calc_mutation_value_multiplicative<&mutation_branch::overmap_multiplier> },
     { "map_memory_capacity_multiplier", calc_mutation_value_multiplicative<&mutation_branch::map_memory_capacity_multiplier> },
-    { "skill_rust_multiplier", calc_mutation_value_multiplicative<&mutation_branch::skill_rust_multiplier> }
+    { "skill_rust_multiplier", calc_mutation_value_multiplicative<&mutation_branch::skill_rust_multiplier> },
+    { "fat_grow_penalty_modifier", calc_mutation_value_multiplicative<&mutation_branch::fat_grow_penalty_modifier> },
+    { "hunger_modifier", calc_mutation_value_additive<&mutation_branch::hunger_modifier> },
+    { "b00bs_modifier", calc_mutation_value_multiplicative<&mutation_branch::b00bs_modifier> }
 };
 
 float Character::mutation_value( const std::string &val ) const
@@ -3376,12 +3422,17 @@ std::string Character::get_weight_description() const
 units::mass Character::bodyweight() const
 {
     //9 kcal = 1 gramm
-    return units::from_kilogram( to_kilogram( bodyweight_base() ) + ( get_stored_kcal() - get_healthy_kcal() ) * 0.00011f );
+    return units::from_kilogram( to_kilogram( bodyweight_base() ) + ( get_stored_kcal() - get_healthy_kcal() ) * 0.00011f ) + get_b00bs_weight();
 }
 
 units::mass Character::bodyweight_base() const
 {
     return units::from_kilogram( init_weight * get_str_base() / 8.0f * height() / init_height );
+}
+
+units::mass Character::get_b00bs_weight() const
+{
+    return units::from_kilogram( get_stored_kcal_b00bs() * 0.1234567f / 1000.0f );
 }
 
 float Character::bodyweight_to_base() const

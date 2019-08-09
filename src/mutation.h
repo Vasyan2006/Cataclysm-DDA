@@ -164,6 +164,15 @@ struct mutation_branch {
         // Multiplier for skill rust, defaulting to 1.
         float skill_rust_multiplier = 1.0f;
 
+        // Modify hunger indicator, defaulting to 0.
+        float hunger_modifier = 0.0f;
+
+        // Modify fat grow penalty for bodypositive characters, defaulting to 1.
+        float fat_grow_penalty_modifier = 1.0f;
+
+        // Modify b00bs size, defaulting to 1.
+        float b00bs_modifier = 1.0f;
+
         // Bonus or penalty to social checks (additive).  50 adds 50% to success, -25 subtracts 25%
         social_modifiers social_mods;
 

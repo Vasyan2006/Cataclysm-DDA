@@ -71,6 +71,18 @@
     "info": "This item can be used to block attacks when worn."
   },
   {
+    "id": "BRA",
+    "type": "json_flag",
+    "context": [ "ARMOR", "TOOL_ARMOR" ],
+    "info": "This item can slightly reduce breast encumbrance."
+  },
+  {
+    "id": "BRA2",
+    "type": "json_flag",
+    "context": [ "ARMOR", "TOOL_ARMOR" ],
+    "info": "This item can significantly reduce breast encumbrance."
+  },
+  {
     "id": "CBM",
     "type": "json_flag",
     "context": [ "BIONIC_ITEM" ],

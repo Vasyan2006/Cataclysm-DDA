@@ -3755,6 +3755,8 @@ void player::update_stomach( const time_point &from, const time_point &to )
     const int five_mins = ticks_between( from, to, 5_minutes );
 
     int hunger_mod = 0;
+    // Set limits for healthy calories in the buffer
+    // Stored calories will not be modified if the buffer is between these limits
     int limit_upper = get_healthy_kcal_buffer();
     int limit_lower = limit_upper / 2;
 
@@ -3771,36 +3773,61 @@ void player::update_stomach( const time_point &from, const time_point &to )
         stomach.bowel_movement( stomach.get_pass_rates( true ), guts );
 
         if( !foodless && rates.hunger > 0.0f ) {
-            mod_hunger( roll_remainder( rates.hunger * five_mins ) );
             // instead of hunger keeping track of how you're living, burn calories instead
             mod_stored_kcal_buffer( -roll_remainder( five_mins * kcal_per_time ) );
         }
 
-        float timerate  = 250.0f;
+        int timerate = 250;
         int dcalorie = 0;
 
         if( get_stored_kcal_buffer() > limit_upper ) {
             dcalorie = ( get_stored_kcal_buffer() - limit_upper ) / timerate * metabolic_rate_base();
             mod_stored_kcal_buffer( -dcalorie );
-            float fat_coeff = pow( 10, bodyweight_to_base() - 1 );
+            float fat_coeff_mod = mutation_value( "fat_grow_penalty_modifier" );
+            if( !male ){
+                fat_coeff_mod /= 2;
+            }
+            float fat_coeff = pow( 10, ( bodyweight_to_base() - 1 ) * fat_coeff_mod );
             mod_stored_kcal( dcalorie * 0.5f / fat_coeff );
         } else if( get_stored_kcal_buffer() < limit_lower ) {
-            timerate = 100.0f;
+            timerate = 100;
             dcalorie = ( get_stored_kcal_buffer() - limit_lower ) / timerate * metabolic_rate_base();
             mod_stored_kcal_buffer( -dcalorie * 0.5f );
             mod_stored_kcal( dcalorie );
         }
+
+        //update b00bs
+        if( !male ) {
+            int dcalorie_b00bs = 0;
+            int timerate_b00bs = 0;
+            if( ( get_stored_kcal_buffer() > limit_upper ) && ( get_stored_kcal_b00bs() < get_stored_kcal_b00bs_healthy() ) ) {
+                timerate_b00bs = 100;
+                dcalorie_b00bs = ( get_stored_kcal_buffer() - limit_upper ) / timerate_b00bs * metabolic_rate_base();
+                mod_stored_kcal_buffer( -dcalorie_b00bs );
+                mod_stored_kcal_b00bs( dcalorie_b00bs * 0.5f );
+            } else if( ( get_stored_kcal_buffer() < limit_lower ) && ( get_stored_kcal_b00bs() > 0 ) ) {
+                timerate_b00bs = 2000;
+                dcalorie_b00bs = ( get_stored_kcal_buffer() - limit_lower ) / timerate_b00bs * metabolic_rate_base();
+                mod_stored_kcal_buffer( -dcalorie_b00bs * 0.5f );
+                mod_stored_kcal_b00bs( dcalorie_b00bs );
+            }
+        }
+
+        if( ( get_stored_kcal_buffer() < 0.1f * get_healthy_kcal_buffer() ) && !has_effect( effect_sleep ) ) {
+            add_msg( m_bad, _( "You faint due to hypoglycemia." ) );
+            fall_asleep( 20_minutes );
+        }
+
     }
-    //add_msg( "limit %s %s ", limit_upper, limit_lower );
-    //add_msg( "bmi %s ", get_bmi() );
 
     hunger_mod += -1.0f * ( get_stored_kcal_buffer() - ( limit_upper + limit_lower ) / 2 ) / ( ( limit_upper - limit_lower ) / 2  ) * 30;
     hunger_mod += -100 * stomach.contains() / stomach.capacity();
+    hunger_mod +=  mutation_value( "hunger_modifier" );
 
     set_hunger( hunger_mod );
 
     if( !foodless && rates.thirst > 0.0f ) {
-        mod_thirst( roll_remainder( rates.thirst * five_mins * units::to_kilogram( bodyweight_base() ) / init_weight) );
+        mod_thirst( roll_remainder( rates.thirst * five_mins * bodyweight_to_init() ) );
     }
     // Mycus and Metabolic Rehydration makes thirst unnecessary
     // since water is not limited by intake but by absorption, we can just set thirst to zero
@@ -4369,7 +4396,6 @@ void player::regen( int rate_multiplier )
 
 void player::update_stamina( int turns )
 {
-   // add_msg( "stamina_used %s", stamina_used );
     float stamina_recovery = 0.0f;
     // Recover some stamina every turn.
     // Mutated stamina works even when winded
@@ -11074,11 +11100,6 @@ int player::get_hp_max( hp_part bp ) const
 
 int player::get_stamina_max() const
 {
-    /*
-    int maxStamina = get_option< int >( "PLAYER_MAX_STAMINA" );
-    maxStamina *= Character::mutation_value( "max_stamina_modifier" );
-    return maxStamina;
-    */
     int maxStamina = g->stamina_max_default;
     maxStamina *= Character::mutation_value( "max_stamina_modifier" );
     return maxStamina;

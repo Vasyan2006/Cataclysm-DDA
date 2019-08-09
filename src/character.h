@@ -241,6 +241,8 @@ class Character : public Creature, public visitable<Character>
         /** Getter for need values exclusive to characters */
         virtual int get_stored_kcal() const;
         virtual int get_stored_kcal_buffer() const;
+        virtual int get_stored_kcal_b00bs() const;
+        virtual int get_stored_kcal_b00bs_healthy() const;
         virtual int get_healthy_kcal() const;
         virtual int get_healthy_kcal_buffer() const;
         virtual float get_kcal_percent() const;
@@ -256,6 +258,7 @@ class Character : public Creature, public visitable<Character>
         /** Modifiers for need values exclusive to characters */
         virtual void mod_stored_kcal( int nkcal );
         virtual void mod_stored_kcal_buffer( int nkcal );
+        virtual void mod_stored_kcal_b00bs( int nkcal );
         virtual void mod_stored_nutr( int nnutr );
         virtual void mod_hunger( int nhunger );
         virtual void mod_thirst( int nthirst );
@@ -265,6 +268,7 @@ class Character : public Creature, public visitable<Character>
         /** Setters for need values exclusive to characters */
         virtual void set_stored_kcal( int kcal );
         virtual void set_stored_kcal_buffer( int kcal );
+        virtual void set_stored_kcal_b00bs( int kcal );
         virtual void set_hunger( int nhunger );
         virtual void set_thirst( int nthirst );
         virtual void set_fatigue( int nfatigue );
@@ -847,8 +851,10 @@ class Character : public Creature, public visitable<Character>
         // returns bodyweight of the Character
         units::mass bodyweight() const;
         units::mass bodyweight_base() const;
+        units::mass get_b00bs_weight() const;
         float bodyweight_to_base() const;
         float bodyweight_to_init() const;
+        int get_b00bs_encumbrance() const;
         // increases the activity level to the next level
         // does not decrease activity level
         void increase_activity_level( float new_level );
@@ -969,6 +975,7 @@ class Character : public Creature, public visitable<Character>
         int healthy_calories;
         int stored_calories_buffer;
         int stored_calories_buffer_default;
+        int stored_calories_b00bs;
 
         int hunger;
         int thirst;

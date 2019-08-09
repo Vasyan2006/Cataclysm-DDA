@@ -259,8 +259,8 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
     center_print( w_stats, 0, h_light_gray, _( title_STATS ) );
 
     // Clear bonus/penalty menu.
-    mvwprintz( w_stats, 7, 0, c_light_gray, "%26s", "" );
     mvwprintz( w_stats, 8, 0, c_light_gray, "%26s", "" );
+    mvwprintz( w_stats, 9, 0, c_light_gray, "%26s", "" );
 
     if( line == 0 ) {
         // Display information on player strength in appropriate window
@@ -317,24 +317,33 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
         }
     } else if( line == 4 ) {
         mvwprintz( w_stats, 6, 1, h_light_gray, _( "Weight:" ) );
-        mvwprintz( w_info, 6, 5, h_light_gray, "%2d", static_cast<int>( to_kilogram( you.bodyweight() ) ) );
         fold_and_print( w_info, 0, 1, FULL_SCREEN_WIDTH - 2, c_magenta,
                                           _( "Your weight is a general indicator of how much fat your body has stored up,"
                                              " which in turn shows how prepared you are to survive for a time without food."
                                              "Having too much, or too little, can be unhealthy." ) );
+    } else if( line == 5 && !you.male ) {
+        mvwprintz( w_stats, 7, 1, h_light_gray, _( "Breast:" ) );
+      //  mvwprintz( w_info, 7, 5, h_light_gray, "%2d", static_cast<int>( to_kilogram( you.bodyweight() ) ) );
+        fold_and_print( w_info, 0, 1, FULL_SCREEN_WIDTH - 2, c_magenta, _( "Self explanatory." ) );
+        mvwprintz( w_info, 2, 1, c_magenta, _( "Torso encumbrance:" ) );
+        mvwprintz( w_info, 2, 23, c_magenta, "+%2d", you.get_b00bs_encumbrance() );
+
+
     }
     wrefresh( w_stats );
     wrefresh( w_info );
 
+    unsigned int last_line = you.male ? 5 : 6;
+
     action = ctxt.handle_input();
     if( action == "DOWN" ) {
         line++;
-        if( line == 5 ) {
+        if( line == last_line ) {
             line = 0;
         }
     } else if( action == "UP" ) {
         if( line == 0 ) {
-            line = 4;
+            line = last_line - 1;
         } else {
             line--;
         }
@@ -346,7 +355,7 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
         curtab = action == "NEXT_TAB" ? curtab + 1 : 6;
     } else if( action == "QUIT" ) {
         done = true;
-    } else if( action == "CONFIRM" && line < 5 && get_option<bool>( "STATS_THROUGH_KILLS" ) &&
+    } else if( action == "CONFIRM" && line < 6 && get_option<bool>( "STATS_THROUGH_KILLS" ) &&
                you.is_player() ) {
         g->u.upgrade_stat_prompt( static_cast<Character::stat>( line ) );
     }
@@ -355,6 +364,9 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
     mvwprintz( w_stats, 4, 1, c_light_gray, _( "Intelligence:" ) );
     mvwprintz( w_stats, 5, 1, c_light_gray, _( "Perception:" ) );
     mvwprintz( w_stats, 6, 1, c_light_gray, _( "Weight:" ) );
+    if( !you.male ) {
+        mvwprintz( w_stats, 7, 1, c_light_gray, _( "Breast:" ) );
+    }
     wrefresh( w_stats );
 }
 
@@ -917,7 +929,57 @@ static void draw_initial_windows( const catacurses::window &w_stats,
     display_stat( _( "Perception:" ), you.get_per(), you.get_per_base(), 5 );
     mvwprintz( w_stats, 6, 1, c_light_gray, _( "Weight:" ) );
     // !!!_ to_kilogram here _!!!
-    mvwprintz( w_stats, 6, 19, c_light_gray, std::to_string( static_cast<float>( to_kilogram( you.bodyweight() ) ) ) );
+    float weight =  static_cast<float>( to_kilogram( you.bodyweight() ) );
+    mvwprintz( w_stats, 6, 19, c_white,  "%.3f", weight );
+
+    if( !you.male ){
+        std::string b00bs_size;
+        int b00bs_weight = to_gram( you.get_b00bs_weight() );
+
+        if( b00bs_weight < 300 ) {
+            b00bs_size = "flat";
+        } else if( b00bs_weight < 430 ) {
+            b00bs_size = "AA";
+        } else if( b00bs_weight < 560 ) {
+            b00bs_size = "A";
+        } else if( b00bs_weight < 700 ) {
+            b00bs_size = "B";
+        } else if( b00bs_weight < 860 ) {
+            b00bs_size = "C";
+        } else if( b00bs_weight < 1100 ) {
+            b00bs_size = "D";
+        } else if( b00bs_weight < 1300 ) {
+            b00bs_size = "E";
+        } else if( b00bs_weight < 1500 ) {
+            b00bs_size = "F";
+        } else if( b00bs_weight < 1800 ) {
+            b00bs_size = "G";
+        } else if( b00bs_weight < 2100 ) {
+            b00bs_size = "H";
+        } else if( b00bs_weight < 2500 ) {
+            b00bs_size = "I";
+        } else if( b00bs_weight < 2800 ) {
+            b00bs_size = "J";
+        } else if( b00bs_weight < 3300 ) {
+            b00bs_size = "K";
+        } else if( b00bs_weight < 3700 ) {
+            b00bs_size = "L";
+        } else if( b00bs_weight < 4200 ) {
+            b00bs_size = "M";
+        } else if( b00bs_weight < 4800 ) {
+            b00bs_size = "N";
+        } else if( b00bs_weight < 5300 ) {
+            b00bs_size = "O";
+        } else if( b00bs_weight < 5800 ) {
+            b00bs_size = "P";
+        } else {
+            b00bs_size = "NaN";
+        }
+
+        mvwprintz( w_stats, 7, 1, c_light_gray, _( "Breast:" ) );
+        mvwprintz( w_stats, 7, 19, c_white, b00bs_size );
+    }
+
 
     wrefresh( w_stats );
 
@@ -1126,6 +1188,35 @@ void player::disp_info()
         }
         effect_text.push_back( pain_text.str() );
     }
+
+
+    // copypaste from avatar.cpp reset_stats() // Starvation
+    if( get_stored_kcal() < get_healthy_kcal() ) {
+
+        float underweight = 1.0f - 1.0f * get_stored_kcal() / get_healthy_kcal();
+        int str_penalty = -get_str_base() * underweight;
+        int dex_penalty = -get_dex_base() * underweight / 2;
+        int int_penalty = -get_int_base() * underweight / 2;
+
+        if( str_penalty < 0 ) {
+            std::stringstream starvation_text;
+            effect_name.push_back( _( "Malnourished" ) );
+            starvation_text << _( "Your body is weakened by starvation.\n \n" );
+
+
+            starvation_text << _( "Strength " ) << str_penalty << "\n";
+            if( dex_penalty < 0 ) {
+                starvation_text << _( "Dexterity " ) << dex_penalty << "\n";
+            }
+            if( int_penalty < 0 ) {
+                starvation_text << _( "Intelligence " ) << int_penalty;
+            }
+
+            effect_text.push_back( starvation_text.str() );
+        }
+    }
+
+
 
     if( ( has_trait( trait_id( "TROGLO" ) ) && g->is_in_sunlight( pos() ) &&
           g->weather.weather == WEATHER_SUNNY ) ||
