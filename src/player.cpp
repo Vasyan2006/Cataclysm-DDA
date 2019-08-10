@@ -1991,9 +1991,9 @@ void player::mod_stat( const std::string &stat, float modifier )
                 stamina_used_fatigue += -modifier;
             }
 
-            // overweight increases stamina use
+            // overweight increases stamina consumption
             if(  bodyweight_to_base() > 1 ) {
-                modifier *= bodyweight_to_base();
+                modifier *= 1.0f + 10 * ( bodyweight_to_base() - 1 );
             }
         }
         stamina += modifier;
@@ -3754,7 +3754,6 @@ void player::update_stomach( const time_point &from, const time_point &to )
     const float kcal_per_time = get_bmr() / ( 12.0f * 24.0f );
     const int five_mins = ticks_between( from, to, 5_minutes );
 
-    int hunger_mod = 0;
     // Set limits for healthy calories in the buffer
     // Stored calories will not be modified if the buffer is between these limits
     int limit_upper = get_healthy_kcal_buffer();
@@ -3820,10 +3819,9 @@ void player::update_stomach( const time_point &from, const time_point &to )
 
     }
 
+    int hunger_mod = 0;
     hunger_mod += -1.0f * ( get_stored_kcal_buffer() - ( limit_upper + limit_lower ) / 2 ) / ( ( limit_upper - limit_lower ) / 2  ) * 30;
-    hunger_mod += -100 * stomach.contains() / stomach.capacity();
     hunger_mod +=  mutation_value( "hunger_modifier" );
-
     set_hunger( hunger_mod );
 
     if( !foodless && rates.thirst > 0.0f ) {
@@ -4126,8 +4124,8 @@ needs_rates player::calc_needs_rates()
         rates.recovery = 1.0f + mutation_value( "fatigue_regen_modifier" );
         if( !is_hibernating() ) {
             // Hunger and thirst advance more slowly while we sleep. This is the standard rate.
-            rates.hunger *= 0.5f;
-            rates.thirst *= 0.5f;
+            rates.hunger *= 0.9f;
+            rates.thirst *= 0.9f;
             const int intense = sleep.is_null() ? 0 : sleep.get_intensity();
             // Accelerated recovery capped to 2x over 2 hours
             // After 16 hours of activity, equal to 7.25 hours of rest
@@ -11962,6 +11960,36 @@ std::pair<std::string, nc_color> player::get_hunger_description() const
     }
 
     return std::make_pair( hunger_string, hunger_color );
+}
+
+std::pair<std::string, nc_color> player::get_stomach_description() const
+{
+    std::string stomach_string;
+    nc_color stomach_color = c_light_gray;
+
+    float stomach_feel = 1.0f * stomach.contains() / stomach.capacity();
+
+    if( stomach_feel <= 0.16 ) {
+            stomach_string = _( "Empty" );
+    } else if( stomach_feel <= 0.33 ) {
+            stomach_string = _( "Unempty" );
+    } else if( stomach_feel <= 0.5 ) {
+            stomach_string = _( "Ununempty" );
+    } else if( stomach_feel <= 0.66 ) {
+            stomach_string = _( "Ununfull" );
+            stomach_color = c_green;
+    } else if( stomach_feel <= 0.83 ) {
+            stomach_string = _( "Unfull" );
+            stomach_color = c_green;
+    } else if( stomach_feel <= 1.0 ) {
+            stomach_string = _( "Full" );
+            stomach_color = c_green;
+    } else {
+            stomach_string = _( "Plusfull" );
+            stomach_color = c_green;
+    }
+
+    return std::make_pair( stomach_string, stomach_color );
 }
 
 void player::enforce_minimum_healing()

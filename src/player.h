@@ -906,6 +906,7 @@ class player : public Character
         item &get_consumable_from( item &it ) const;
 
         std::pair<std::string, nc_color> get_hunger_description() const override;
+        std::pair<std::string, nc_color> get_stomach_description() const;
 
         /** Get vitamin contents for a comestible */
         std::map<vitamin_id, int> vitamins_from( const item &it ) const;

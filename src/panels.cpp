@@ -1363,6 +1363,8 @@ static void draw_health_classic( avatar &u, const catacurses::window &w )
     // needs
     auto needs_pair = u.get_hunger_description();
     mvwprintz( w, 1, 21, needs_pair.second, needs_pair.first );
+    needs_pair = u.get_stomach_description();
+    mvwprintz( w, 1, 30, needs_pair.second, needs_pair.first );
     needs_pair = u.get_thirst_description();
     mvwprintz( w, 2, 21, needs_pair.second, needs_pair.first );
     mvwprintz( w, 4, 21, c_white, _( "Focus" ) );
@@ -1376,7 +1378,7 @@ static void draw_health_classic( avatar &u, const catacurses::window &w )
     std::pair<nc_color, int> morale_pair = morale_stat( u );
     bool m_style = get_option<std::string>( "MORALE_STYLE" ) == "horizontal";
     std::string smiley = morale_emotion( morale_pair.second, get_face_type( u ), m_style );
-    mvwprintz( w, 1, 34, morale_pair.first, smiley );
+    mvwprintz( w, 2, 34, morale_pair.first, smiley );
 
     if( !veh ) {
         // stats
