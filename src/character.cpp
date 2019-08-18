@@ -2206,7 +2206,7 @@ int Character::get_stored_kcal_b00bs_healthy() const
 {
     int ret = 0;
     if( !male ) {
-        ret = get_stored_kcal() * 0.1f * mutation_value( "b00bs_modifier" );
+        ret = get_stored_kcal() * 0.085f * mutation_value( "b00bs_modifier" );
     }
     return ret;
 }

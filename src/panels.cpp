@@ -1559,7 +1559,7 @@ static void draw_health_classic( avatar &u, const catacurses::window &w )
     auto needs_pair = u.get_hunger_description();
     mvwprintz( w, point( 20, 1 ), needs_pair.second, needs_pair.first );
     needs_pair = u.get_stomach_description();
-    mvwprintz( w, point( 30, 30 ), needs_pair.second, needs_pair.first );
+    mvwprintz( w, point( 30, 1 ), needs_pair.second, needs_pair.first );
 
     needs_pair = u.get_thirst_description();
     mvwprintz( w, point( 21, 2 ), needs_pair.second, needs_pair.first );
@@ -1794,11 +1794,6 @@ static void draw_veh_padding( const avatar &u, const catacurses::window &w )
             mvwprintz( w, point( 20, 0 ), c_light_green, "%d", t_speed );
             mvwprintz( w, point( 21 + offset, 0 ), c_light_gray, "%s", ">" );
             mvwprintz( w, point( 23 + offset, 0 ), col_vel, "%d", c_speed );
-        } else {
-            const std::string type = get_option<std::string>( "USE_METRIC_SPEEDS" );
-            mvwprintz( w, point( 13, 0 ), c_light_gray, "%s :", type );
-            int c_speed = static_cast<int>( convert_velocity( veh->velocity, VU_VEHICLE ) );
-            mvwprintz( w, point( 20, 0 ) col_vel, "%d", c_speed );
         }
     }
 

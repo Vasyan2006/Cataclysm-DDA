@@ -329,8 +329,7 @@ static void draw_stats_tab( const catacurses::window &w_stats, const catacurses:
                                              " which in turn shows how prepared you are to survive for a time without food."
                                              "Having too much, or too little, can be unhealthy." ) );
     } else if( line == 5 && !you.male ) {
-        mvwprintz( w_stats, point( 7, 1 ), h_light_gray, _( "Breast:" ) );
-      //  mvwprintz( w_info, 7, 5, h_light_gray, "%2d", static_cast<int>( to_kilogram( you.bodyweight() ) ) );
+        mvwprintz( w_stats, point( 1, 7 ), h_light_gray, _( "Breast:" ) );
         fold_and_print( w_info, point( 1, 0 ), FULL_SCREEN_WIDTH - 2, c_magenta, _( "Self explanatory." ) );
         mvwprintz( w_info, point( 1, 2 ), c_magenta, _( "Torso encumbrance:" ) );
         mvwprintz( w_info, point( 23, 2 ), c_magenta, "+%2d", you.get_b00bs_encumbrance() );
