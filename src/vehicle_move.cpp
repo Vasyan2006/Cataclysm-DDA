@@ -344,7 +344,7 @@ bool vehicle::collision( std::vector<veh_collision> &colls,
 
     if( dp.z != 0 && ( dp.x != 0 || dp.y != 0 ) ) {
         // Split into horizontal + vertical
-        return collision( colls, tripoint( dp.x, dp.y, 0 ), just_detect, bash_floor ) ||
+        return collision( colls, tripoint( dp.xy(), 0 ), just_detect, bash_floor ) ||
                collision( colls, tripoint( 0,    0,    dp.z ), just_detect, bash_floor );
     }
 
@@ -419,7 +419,7 @@ static void terrain_collision_data( const tripoint &p, bool bash_floor,
     // Just a rough rescale for now to obtain approximately equal numbers
     const int bash_min = g->m.bash_resistance( p, bash_floor );
     const int bash_max = g->m.bash_strength( p, bash_floor );
-    mass = ( bash_min + bash_max ) / 2;
+    mass = ( bash_min + bash_max ) / 2.0;
     density = bash_min;
 }
 
@@ -511,24 +511,7 @@ veh_collision vehicle::part_collision( int part, const tripoint &p,
         ret.target = critter;
         e = 0.30;
         part_dens = 15;
-        switch( critter->get_size() ) {
-            case MS_TINY:    // Rodent
-                mass2 = 1;
-                break;
-            case MS_SMALL:   // Half human
-                mass2 = 41;
-                break;
-            default:
-            case MS_MEDIUM:  // Human
-                mass2 = 82;
-                break;
-            case MS_LARGE:   // Cow
-                mass2 = 400;
-                break;
-            case MS_HUGE:     // TAAAANK
-                mass2 = 1000;
-                break;
-        }
+        mass2 = units::to_kilogram( critter->get_weight() );
         ret.target_name = critter->disp_name();
     } else if( ( bash_floor && g->m.is_bashable_ter_furn( p, true ) ) ||
                ( g->m.is_bashable_ter_furn( p, false ) && g->m.move_cost_ter_furn( p ) != 2 &&
@@ -1355,7 +1338,7 @@ vehicle *vehicle::act_on_map()
     vehicle *new_pointer = this;
     // Split the movement into horizontal and vertical for easier processing
     if( dp.x != 0 || dp.y != 0 ) {
-        new_pointer = g->m.move_vehicle( *new_pointer, tripoint( dp.x, dp.y, 0 ), mdir );
+        new_pointer = g->m.move_vehicle( *new_pointer, tripoint( dp.xy(), 0 ), mdir );
     }
 
     if( new_pointer != nullptr && dp.z != 0 ) {
@@ -1383,7 +1366,7 @@ void vehicle::check_falling_or_floating()
     size_t water_tiles = 0;
     for( const tripoint &p : pts ) {
         if( is_falling ) {
-            tripoint below( p.x, p.y, p.z - 1 );
+            tripoint below( p.xy(), p.z - 1 );
             is_falling &= g->m.has_flag_ter_or_furn( TFLAG_NO_FLOOR, p ) && ( p.z > -OVERMAP_DEPTH ) &&
                           !g->m.supports_above( below );
         }

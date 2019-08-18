@@ -519,7 +519,7 @@ bool Character::move_effects( bool attacking )
         /** @EFFECT_STR increases chance to escape crushing rubble */
 
         /** @EFFECT_DEX increases chance to escape crushing rubble, slightly */
-        if( x_in_y( get_str() + get_dex() / 4, 100 ) ) {
+        if( x_in_y( get_str() + get_dex() / 4.0, 100 ) ) {
             remove_effect( effect_crushed );
             add_msg_player_or_npc( m_good, _( "You free yourself from the rubble!" ),
                                    _( "<npcname> frees themselves from the rubble!" ) );
@@ -616,6 +616,8 @@ void Character::process_turn()
     }
 
     Creature::process_turn();
+
+    check_item_encumbrance_flag();
 }
 
 void Character::recalc_hp()
@@ -789,6 +791,21 @@ float Character::get_vision_threshold( float light_level ) const
 
     return std::min( static_cast<float>( LIGHT_AMBIENT_LOW ),
                      threshold_for_range( range ) * dimming_from_light );
+}
+
+void Character::check_item_encumbrance_flag()
+{
+    bool update_required = false;
+    for( auto &i : worn ) {
+        if( !update_required && i.has_flag( "ENCUMBRANCE_UPDATE" ) ) {
+            update_required = true;
+        }
+        i.unset_flag( "ENCUMBRANCE_UPDATE" );
+    }
+
+    if( update_required ) {
+        reset_encumbrance();
+    }
 }
 
 bool Character::has_bionic( const bionic_id &b ) const
@@ -1103,8 +1120,11 @@ void find_ammo_helper( T &src, const item &obj, bool empty, Output out, bool nes
                 return VisitResponse::SKIP;
             }
             if( !node->made_of( SOLID ) ) {
-                // some liquids are ammo but we can't reload with them unless within a container
+                // some liquids are ammo but we can't reload with them unless within a container or frozen
                 return VisitResponse::SKIP;
+            }
+            if( node->is_frozen_liquid() ) {
+                out = item_location( src, node );
             }
             if( node->is_ammo_container() && !node->contents.empty() &&
                 !node->contents_made_of( SOLID ) ) {
@@ -1685,6 +1705,7 @@ units::mass Character::get_weight() const
     ret += inv.weight();           // Weight of the stored inventory
     ret += wornWeight;             // Weight of worn items
     ret += weapon.weight();        // Weight of wielded item
+    ret += bionics_weight();       // Weight of installed bionics
     return ret;
 }
 
@@ -1743,6 +1764,27 @@ static void layer_item( std::array<encumbrance_data, num_bp> &vals,
 
         vals[bp].armor_encumbrance += armorenc;
     }
+}
+
+bool Character::is_wearing_power_armor( bool *hasHelmet ) const
+{
+    bool result = false;
+    for( auto &elem : worn ) {
+        if( !elem.is_power_armor() ) {
+            continue;
+        }
+        if( hasHelmet == nullptr ) {
+            // found power armor, helmet not requested, cancel loop
+            return true;
+        }
+        // found power armor, continue search for helmet
+        result = true;
+        if( elem.covers( bp_head ) ) {
+            *hasHelmet = true;
+            return true;
+        }
+    }
+    return result;
 }
 
 bool Character::is_wearing_active_power_armor() const
@@ -1883,30 +1925,13 @@ static void apply_mut_encumbrance( std::array<encumbrance_data, num_bp> &vals,
 
 void Character::mut_cbm_encumb( std::array<encumbrance_data, num_bp> &vals ) const
 {
-    if( has_bionic( bionic_id( "bio_stiff" ) ) ) {
-        // All but head, mouth and eyes
-        for( auto &val : vals ) {
-            val.encumbrance += 10;
+
+    for( const bionic &bio : *my_bionics ) {
+        for( const auto &element : bio.info().encumbrance ) {
+            vals[element.first].encumbrance += element.second;
         }
-
-        vals[bp_head].encumbrance -= 10;
-        vals[bp_mouth].encumbrance -= 10;
-        vals[bp_eyes].encumbrance -= 10;
     }
 
-    if( has_bionic( bionic_id( "bio_nostril" ) ) ) {
-        vals[bp_mouth].encumbrance += 10;
-    }
-    if( has_bionic( bionic_id( "bio_shotgun" ) ) ) {
-        vals[bp_arm_l].encumbrance += 5;
-    }
-    if( has_bionic( bionic_id( "bio_thumbs" ) ) ) {
-        vals[bp_hand_l].encumbrance += 10;
-        vals[bp_hand_r].encumbrance += 10;
-    }
-    if( has_bionic( bionic_id( "bio_pokedeye" ) ) ) {
-        vals[bp_eyes].encumbrance += 10;
-    }
     if( has_active_bionic( bionic_id( "bio_shock_absorber" ) ) ) {
         for( auto &val : vals ) {
             val.encumbrance += 3; // Slight encumbrance to all parts except eyes
@@ -3443,6 +3468,15 @@ float Character::bodyweight_to_base() const
 float Character::bodyweight_to_init() const
 {
     return static_cast<float>( units::to_kilogram( bodyweight() ) ) / init_weight;
+}
+
+units::mass Character::bionics_weight() const
+{
+    units::mass bio_weight = 0_gram;
+    for( const auto bio : *my_bionics ) {
+        bio_weight += item::find_type( bio.id.c_str() )->weight;
+    }
+    return bio_weight;
 }
 
 int Character::height() const
