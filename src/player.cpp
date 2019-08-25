@@ -11090,6 +11090,13 @@ void player::mod_stamina_max_penalty( int modifier )
     stamina_max_penalty = std::max( stamina_max_penalty, 0 );
 }
 
+void player::set_stamina_max_penalty( int modifier )
+{
+    if( stamina_max_penalty != modifier ) {
+        stamina_max_penalty = modifier;
+    }
+}
+
 void player::burn_move_stamina( int moves )
 {
     int overburden_percentage = 0;

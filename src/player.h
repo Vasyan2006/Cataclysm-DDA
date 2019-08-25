@@ -1681,6 +1681,7 @@ class player : public Character
         int get_stamina_max() const;
         int get_stamina_max_penalty() const;
         void mod_stamina_max_penalty( int modifier );
+        void set_stamina_max_penalty( int modifier );
         void burn_move_stamina( int moves );
 
         //message related stuff

@@ -802,7 +802,7 @@
     },
     "weather": {
       "base_temperature": 6.5,
-      "base_humidity": 40.0,
+      "base_humidity": 38.0,
       "base_pressure": 1015.0,
       "base_acid": 0.0,
       "base_wind": 5.7,

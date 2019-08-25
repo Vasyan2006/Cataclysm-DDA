@@ -2791,9 +2791,10 @@ void overmap::place_cities()
     const double city_map_coverage_ratio = 1.0 / std::pow( 2.0, op_city_spacing );
     const double omts_per_city = ( op_city_size * 2 + 1 ) * ( op_city_size * 2 + 1 ) * 3 / 4.0;
 
+
     // how many cities on this overmap?
-    const int NUM_CITIES =
-        roll_remainder( omts_per_overmap * city_map_coverage_ratio / omts_per_city );
+    int NUM_CITIES = roll_remainder( omts_per_overmap * city_map_coverage_ratio / omts_per_city );
+    NUM_CITIES = std::min( NUM_CITIES, 1 );
 
     const string_id<overmap_connection> local_road_id( "local_road" );
     const overmap_connection &local_road( *local_road_id );
@@ -3922,7 +3923,9 @@ bool overmap::place_special_attempt( overmap_special_batch &enabled_specials,
 
         place_special( special, p, rotation, nearest_city, false, must_be_unexplored );
 
-        if( ++iter->instances_placed >= special.occurrences.max ) {
+        const float special_density = get_option<float>( "SPECIAL_DENSITY" );
+
+        if( ++iter->instances_placed >= roll_remainder( special_density * special.occurrences.max ) ) {
             enabled_specials.erase( iter );
         }
 
@@ -4081,7 +4084,8 @@ void overmap::place_specials( overmap_special_batch &enabled_specials )
 
             // If, after incrementing the placement count, we're at our max, remove
             // this special from our list.
-            if( it->instances_placed >= it->special_details->occurrences.max ) {
+            const float special_density = get_option<float>( "SPECIAL_DENSITY" );
+            if( it->instances_placed >= roll_remainder( special_density * it->special_details->occurrences.max ) ) {
                 it = enabled_specials.erase( it );
             } else {
                 it++;

@@ -649,6 +649,7 @@ void character_edit_menu()
             smenu.addentry( 5, true, 'a', _( "Reset all basic needs" ) );
             smenu.addentry( 6, true, 's', "%s: %d", _( "Stored kCal buffer" ), p.get_stored_kcal_buffer() );
             smenu.addentry( 7, true, 's', "%s: %d", _( "Stored kCal b00bs" ), p.get_stored_kcal_b00bs() );
+            smenu.addentry( 8, true, 's', "%s: %d", _( "Stamina max penalty" ), p.get_stamina_max_penalty() );
 
             const auto &vits = vitamin::all();
             for( const auto &v : vits ) {
@@ -704,6 +705,11 @@ void character_edit_menu()
                  case 7:
                     if( query_int( value, _( "Set stored kCal b00bs to? Currently: %d" ), p.get_stored_kcal_b00bs() ) ) {
                         p.set_stored_kcal_b00bs( value );
+                    }
+                    break;
+                 case 8:
+                    if( query_int( value, _( "Set stamina max penalty to? Currently: %d" ), p.get_stamina_max_penalty() ) ) {
+                        p.set_stamina_max_penalty( value );
                     }
                     break;
                 default:

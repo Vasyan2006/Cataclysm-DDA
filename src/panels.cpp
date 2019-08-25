@@ -1557,7 +1557,7 @@ static void draw_health_classic( avatar &u, const catacurses::window &w )
 
     // needs
     auto needs_pair = u.get_hunger_description();
-    mvwprintz( w, point( 20, 1 ), needs_pair.second, needs_pair.first );
+    mvwprintz( w, point( 21, 1 ), needs_pair.second, needs_pair.first );
     needs_pair = u.get_stomach_description();
     mvwprintz( w, point( 30, 1 ), needs_pair.second, needs_pair.first );
 

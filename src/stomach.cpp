@@ -303,21 +303,21 @@ stomach_pass_rates stomach_contents::get_pass_rates( bool stomach )
     // 3 hours will be accounted here as stomach
     // the rest will be guts
     if( stomach ) {
-        rates.min_vol = capacity() / 6;
+        rates.min_vol = capacity() / 6 / 6.0f;
         // 3 hours to empty in 30 minute increments
-        rates.percent_vol = 1.0f / 6.0f;
+        rates.percent_vol = 1.0f / 6.0f / 6.0f;
         rates.min_vit = 1;
-        rates.percent_vit = 1.0f / 6.0f;
+        rates.percent_vit = 1.0f / 6.0f / 6.0f;
         rates.min_kcal = 5;
-        rates.percent_kcal = 1.0f / 6.0f;
+        rates.percent_kcal = 1.0f / 6.0f / 6.0f;
     } else {
-        rates.min_vol = std::max( capacity() / 100, 1_ml );
+        rates.min_vol = std::max( capacity() / 100 / 6, 1_ml );
         // 50 hours to empty in 30 minute increments
-        rates.percent_vol = 0.01f;
+        rates.percent_vol = 0.01f / 6.0f;
         rates.min_vit = 1;
-        rates.percent_vit = 0.01f;
+        rates.percent_vit = 0.01f / 6.0f;
         rates.min_kcal = 5;
-        rates.percent_kcal = 0.01f;
+        rates.percent_kcal = 0.01f / 6.0f;
     }
     return rates;
 }

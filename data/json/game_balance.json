@@ -74,7 +74,7 @@
     "name": "PLAYER_STAMINA_PENALTY",
     "info": "How much will decrease stamina pool by using 1 stamina point.  Default: 0.01.  Set to 0 to turn it off.",
     "stype": "float",
-    "value": 0.01
+    "value": 0.02
   },
   {
     "type": "EXTERNAL_OPTION",
